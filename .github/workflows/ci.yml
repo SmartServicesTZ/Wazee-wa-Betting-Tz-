@@ -24,6 +24,6 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Check Worker syntax
-        run: node --check worker/preview.js
+        run: node --check worker/preview.js && node --check worker/auth.js
       - name: Production build
         run: npm run build
