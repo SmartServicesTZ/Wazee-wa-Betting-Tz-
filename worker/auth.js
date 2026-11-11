@@ -130,3 +130,5 @@ $("sellerForm").addEventListener("submit", async (event) => {
   } catch (error) { message(error?.message || "Imeshindikana kutuma ombi."); }
 });
 loadPosts();
+
+// Keep auth client and Worker API contract versioned together.
