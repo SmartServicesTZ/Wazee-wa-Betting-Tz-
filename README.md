@@ -14,7 +14,7 @@ A new, independent project for the Wazee wa Betting TZ hybrid marketplace.
 - The legacy repository and its Firebase data remain untouched.
 - Firebase project `wazee-wa-betting-tz-e7183` stays on the Spark plan; never enable billing or add a payment method without explicit owner approval.
 - No real-money transactions, deposits, purchases, or withdrawals during the initial build.
-- No production database migrations, destructive changes, or production deployment without explicit approval.
+- No production database migrations or destructive changes without explicit approval. Static frontend deployment is authorized; production data and real-money features remain disabled.
 - Secrets must never be committed to this repository.
 
 ## Development
