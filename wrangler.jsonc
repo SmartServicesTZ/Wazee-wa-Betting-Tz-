@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wazee-wa-betting-tz",
+  "main": "worker/preview.js",
+  "compatibility_date": "2026-11-11",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": true },
+    "traces": { "enabled": true }
+  },
+  "vars": {
+    "FIREBASE_PROJECT_ID": "wazee-wa-betting-tz-e7183"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wazee-wa-betting-tz-db",
+      "database_id": "13706256-451e-4a18-82cb-bf681ff856b6"
+    }
+  ]
+}
