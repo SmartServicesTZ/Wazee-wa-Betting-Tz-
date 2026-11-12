@@ -8,7 +8,7 @@ type Post = { id: string; authorId: string; author: string; text: string; likes:
 type Comment = { id: string; body: string; author_name: string; created_at: string };
 type Pick = { id: number; home: string; away: string; market: string; selection: string };
 type Profile = { id: string; display_name: string; role: 'buyer' | 'seller' | 'admin'; account_status: string };
-type Listing = { id: string; title: string; description_preview: string; sport: string; price_tzs: number; seller_name: string; selection_count: number };
+type Listing = { id: string; title: string; description_preview: string; sport: string; price_tzs: number; seller_name: string; selection_count: number; created_at: string };
 type SellerApplication = { id: string; legal_name: string; phone: string; reason: string; status: string; created_at: string; display_name: string };
 type MySellerApplication = { id: string; legal_name: string; phone: string; reason: string; status: 'pending' | 'approved' | 'rejected'; created_at: string; reviewed_at: string | null };
 type AdminSummary = { users: number; active_sellers: number; pending_seller_applications: number; pending_listings: number; published_listings: number; community_posts: number; sports_fixtures: number; wallet_ledger_entries: number };
@@ -34,6 +34,8 @@ const categories = ['Zote', 'Mpira wa miguu', 'Basketball', 'Tennis', 'Mikeka ya
 function App() {
   const [active, setActive] = useState<Section>('overview');
   const [category, setCategory] = useState('Zote');
+  const [marketSearch, setMarketSearch] = useState('');
+  const [marketSort, setMarketSort] = useState('newest');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -88,6 +90,15 @@ function App() {
   const [sellerSelections, setSellerSelections] = useState<Pick[]>([]);
   const activeLabel = navItems.find((item) => item.id === active)?.label ?? 'Muhtasari';
   const totalSelections = useMemo(() => picks.length, [picks]);
+  const filteredListings = useMemo(() => {
+    const query = marketSearch.trim().toLowerCase();
+    const filtered = listings.filter((listing) => {
+      const matchesCategory = category === 'Zote' || (category === 'Mikeka ya bure' ? listing.price_tzs === 0 : listing.sport.toLowerCase() === (category === 'Mpira wa miguu' ? 'football' : category.toLowerCase()));
+      const searchable = (listing.title + ' ' + listing.description_preview + ' ' + listing.seller_name).toLowerCase();
+      return matchesCategory && (!query || searchable.includes(query));
+    });
+    return filtered.sort((a, b) => marketSort === 'price_low' ? a.price_tzs - b.price_tzs : marketSort === 'price_high' ? b.price_tzs - a.price_tzs : b.created_at.localeCompare(a.created_at));
+  }, [listings, category, marketSearch, marketSort]);
 
   useEffect(() => watchAuth((user) => {
     setAuthUser(user);
@@ -307,8 +318,8 @@ function App() {
   const pageContent = () => {
     if (active === 'marketplace') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">BUYER MARKETPLACE</span><h2>Soko la mikeka</h2><p>Gundua wachambuzi na mikeka iliyochapishwa na wauzaji walioidhinishwa.</p></div><button className="primary-button" onClick={() => go('seller')}>＋ Omba kuwa seller</button></div>
-      <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><input className="search-input" placeholder="Tafuta tipster au mkeka..." /></div>
-      {listings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>Marketplace inasubiri wauzaji wa kwanza</h3><p>Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{listings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name} · {listing.selection_count || 0} selections</small></div></article>)}</div>}
+      <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="market-search-controls"><input className="search-input" value={marketSearch} onChange={(event) => setMarketSearch(event.target.value)} placeholder="Tafuta tipster au mkeka..." /><select className="market-sort" value={marketSort} onChange={(event) => setMarketSort(event.target.value)}><option value="newest">Mpya kwanza</option><option value="price_low">Bei: ndogo kwanza</option><option value="price_high">Bei: kubwa kwanza</option></select></div></div>
+      {filteredListings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>{listings.length === 0 ? 'Marketplace inasubiri wauzaji wa kwanza' : 'Hakuna listing inayolingana na utafutaji'}</h3><p>{listings.length === 0 ? 'Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.' : 'Badili neno la utafutaji au chagua kundi jingine.'}</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{filteredListings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name} · {listing.selection_count || 0} selections</small></div></article>)}</div>}
     </section>;
     if (active === 'community') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">SOCIAL NETWORK</span><h2>Jamii ya Wazee</h2><p>Jadili michezo, shiriki uchambuzi na fuatilia wachambuzi.</p></div></div>

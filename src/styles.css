@@ -135,3 +135,9 @@
 @media(max-width:560px){.member-profile-card{padding:22px 17px}.member-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .avatar-button{border:0;cursor:pointer;font:inherit}
+
+
+.market-search-controls{display:flex;align-items:center;gap:8px}
+.market-search-controls .search-input{width:240px}
+.market-sort{border:1px solid #e4eaf0;background:#fff;border-radius:9px;padding:10px 12px;font:inherit;font-size:10px;color:#607086}
+@media(max-width:760px){.market-search-controls{width:100%;flex-direction:column;align-items:stretch}.market-search-controls .search-input{width:100%}.market-sort{width:100%}}
