@@ -23,10 +23,9 @@ type SportsProvider = { id: string; provider_key: string; display_name: string; 
 type SportsResult = { fixture_id: string; competition: string; home_name: string; away_name: string; kickoff_at: string; home_score: number | null; away_score: number | null; result_status: string; fetched_at: string; provider_name: string };
 
 const navItems: { id: Section; label: string; icon: string }[] = [
-  { id: 'overview', label: 'Muhtasari', icon: '⌂' },
-  { id: 'marketplace', label: 'Soko la mikeka', icon: '▤' },
-  { id: 'community', label: 'Jamii', icon: '◎' },
+  { id: 'marketplace', label: 'Uwanja wa mikeka', icon: '▤' },
   { id: 'sports', label: 'Michezo', icon: '◉' },
+  { id: 'community', label: 'Jamii', icon: '◎' },
   { id: 'builder', label: 'Jenga mkeka', icon: '＋' },
   { id: 'seller', label: 'Seller Center', icon: '♙' },
   { id: 'admin', label: 'Admin', icon: '⚙' },
@@ -34,7 +33,7 @@ const navItems: { id: Section; label: string; icon: string }[] = [
 const categories = ['Zote', 'Mpira wa miguu', 'Basketball', 'Tennis', 'Mikeka ya bure'];
 
 function App() {
-  const [active, setActive] = useState<Section>('overview');
+  const [active, setActive] = useState<Section>('marketplace');
   const [category, setCategory] = useState('Zote');
   const [marketSearch, setMarketSearch] = useState('');
   const [marketSort, setMarketSort] = useState('newest');
