@@ -71,3 +71,5 @@ export async function apiRequest<T>(path: string, user?: User | null, init: Requ
   }
   return data;
 }
+
+export type { User };
