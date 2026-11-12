@@ -106,3 +106,6 @@
 .admin-stat small{display:block;color:#8996a4;font-size:9px;font-weight:700}
 .admin-stat strong{display:block;color:#2f7b70;font-family:Manrope,sans-serif;font-size:22px;margin-top:6px}
 @media(max-width:760px){.admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+.follow-button{margin-left:auto;border:1px solid #dce9e4;background:#f7fbf9;color:#367b70;border-radius:7px;padding:7px 10px;font-size:9px;font-weight:800}
