@@ -27,7 +27,7 @@ An independent hybrid marketplace combining:
 - Authenticated seller applications
 - Seller role granted only after Admin approval
 - Seller listing submissions with up to 30 match selections and admin publication queue
-- Community likes/comments and server-backed counters
+- Community likes/comments, follows and editable public member profiles
 - Read-only sports fixtures/results/odds APIs with provider freshness metadata
 - PNG export for a clearly labelled draft ticket (not a placed bet)
 - Seller listing submissions enter pending review; Admin publication is required
