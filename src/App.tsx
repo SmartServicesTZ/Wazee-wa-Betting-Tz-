@@ -33,6 +33,21 @@ const navItems: { id: Section; label: string; icon: string }[] = [
 ];
 const categories = ['Zote', 'Mpira wa miguu', 'Basketball', 'Tennis', 'Mikeka ya bure'];
 
+type DemoTeam = { name: string; logo: string; };
+const demoTeams: Record<string, DemoTeam> = {
+  'Arsenal': { name: 'Arsenal', logo: 'https://media.api-sports.io/football/teams/42.png' },
+  'Real Madrid': { name: 'Real Madrid', logo: 'https://media.api-sports.io/football/teams/541.png' },
+  'Inter Milan': { name: 'Inter Milan', logo: 'https://media.api-sports.io/football/teams/505.png' },
+  'Barcelona': { name: 'Barcelona', logo: 'https://media.api-sports.io/football/teams/529.png' },
+  'Bayern Munich': { name: 'Bayern Munich', logo: 'https://media.api-sports.io/football/teams/157.png' },
+  'Liverpool': { name: 'Liverpool', logo: 'https://media.api-sports.io/football/teams/40.png' },
+  'PSG': { name: 'Paris Saint-Germain', logo: 'https://media.api-sports.io/football/teams/85.png' },
+  'Juventus': { name: 'Juventus', logo: 'https://media.api-sports.io/football/teams/496.png' },
+};
+const getDemoTeam = (selection: string): DemoTeam => {
+  const teamName = Object.keys(demoTeams).find((name) => selection.toLowerCase().includes(name.toLowerCase()));
+  return teamName ? demoTeams[teamName] : { name: 'Timu', logo: '' };
+};
 type DemoTicket = { id: number; title: string; category: string; posted: string; selections: string[]; sampleOdds: string; };
 const demoTickets: DemoTicket[] = [
  { id: 1, title: 'Mkeka wa mfano #01', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Arsenal kushinda', 'Real Madrid zaidi ya magoli 1.5', 'Inter Milan kupata goli'], sampleOdds: '3.40' },
@@ -374,9 +389,17 @@ function App() {
       <div className="listing-grid feed-listing-grid">
         {demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).map((ticket) => <article className="listing-card demo-ticket-card" key={'demo-' + ticket.id}>
           <div className="ticket-author-row"><span className="official-avatar small">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>{ticket.posted}</small></div><span className="demo-pill">DEMO</span></div>
-          <div className="ticket-title-row"><h3>{ticket.title}</h3><span className="ticket-free">BURE</span></div>
-          <div className="ticket-picks">{ticket.selections.map((selection, index) => <div className="ticket-pick-row" key={index}><span>{index + 1}</span><strong>{selection}</strong></div>)}</div>
-          <div className="ticket-card-footer"><span><small>ODDS ZA MFANO</small><strong>{ticket.sampleOdds}</strong></span><span className="ticket-leg-count">{ticket.selections.length} chaguo</span></div>
+          <div className="ticket-poster">
+            <div className="ticket-poster-brand"><span className="poster-brand-mark">W</span><div><strong>WAZEE WA BETTING TZ</strong><small>MKeka WA MFANO · TICKET PREVIEW</small></div><span className="poster-demo-tag">DEMO</span></div>
+            <div className="ticket-poster-heading"><div><small>MKeka WA BURE</small><h3>{ticket.title}</h3></div><span className="ticket-free">MFANO</span></div>
+            <div className="ticket-picks">{ticket.selections.map((selection, index) => { const team = getDemoTeam(selection); const outcome = selection.slice(team.name === 'Timu' ? 0 : team.name.length).trim(); return <div className="ticket-pick-row" key={index}>
+              <span className="ticket-pick-number">{String(index + 1).padStart(2, '0')}</span>
+              <span className="team-logo-wrap">{team.logo ? <img src={team.logo} alt={team.name + ' logo'} loading="lazy" /> : <span className="team-logo-fallback">⚽</span>}</span>
+              <span className="ticket-pick-copy"><strong>{team.name}</strong><small>{outcome || selection}</small></span>
+              <span className="ticket-pick-check">✓</span>
+            </div>; })}</div>
+            <div className="ticket-poster-footer"><div><small>ODDS JUMLA (MFANO)</small><strong>{ticket.sampleOdds}</strong></div><div className="poster-match-count"><strong>{ticket.selections.length}</strong><small>MECHI</small></div><span className="poster-watermark">WBTZ</span></div>
+          </div>
           <div className="demo-social-actions">
             <button className={demoLiked.includes(ticket.id) ? 'social-action is-liked' : 'social-action'} onClick={() => toggleDemoLike(ticket.id)} aria-pressed={demoLiked.includes(ticket.id)}><span>♥</span> Like <small>{demoLiked.includes(ticket.id) ? '1' : '0'}</small></button>
             <button className="social-action" onClick={() => { setDemoCommentOpen(demoCommentOpen === ticket.id ? null : ticket.id); setDemoCommentDraft(''); }}><span>▢</span> Maoni <small>{(demoComments[ticket.id] || []).length}</small></button>
