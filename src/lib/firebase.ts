@@ -65,6 +65,7 @@ export async function apiRequest<T>(path: string, user?: User | null, init: Requ
       seller_application_already_exists: "Tayari una ombi la seller.",
       seller_approval_required: "Subiri Admin aidhinishe akaunti yako ya seller.",
       admin_required: "Huna ruhusa ya kufungua sehemu hii.",
+      account_suspended: "Akaunti yako imesimamishwa. Wasiliana na msaada.",
     };
     throw new Error((data as { error?: string }).error ? messages[(data as { error: string }).error] || (data as { error: string }).error : "Ombi halikukamilika.");
   }
