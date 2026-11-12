@@ -37,6 +37,7 @@ The Worker verifies Firebase ID-token signature, issuer, audience and expiry aga
 - `GET /api/v1/admin/users` — admin-only user directory.
 - `POST /api/v1/admin/users/:id/status` — suspend/reactivate buyer or seller accounts; Admin accounts and self-suspension are blocked.
 - `GET /api/v1/admin/audit-events` — admin-only recent audit events.
+- `GET /api/v1/admin/wallet/ledger` — admin-only read-only ledger audit view; no balance mutation or money movement.
 - `GET /api/v1/admin/seller-applications` — admin-only seller queue.
 - `POST /api/v1/admin/seller-applications/:id/decision` — admin-only approve/reject.
 - `GET /api/v1/admin/listings` — admin-only pending listing queue, including full descriptions and selections for moderation.
