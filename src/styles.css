@@ -434,3 +434,107 @@ body { background:var(--wz-bg); color:var(--wz-ink); }
 .poster-watermark{color:#ffffff12;font-size:16px;font-weight:950;letter-spacing:.1em}
 .ticket-card-footer{margin-top:10px;padding-top:0;border-top:0}
 @media(max-width:420px){.demo-ticket-card{padding:9px}.ticket-poster{padding:10px}.ticket-poster .ticket-pick-row{grid-template-columns:20px 31px minmax(0,1fr) 18px;gap:6px;padding:6px}.team-logo-wrap{width:29px;height:29px}.team-logo-wrap img{width:23px;height:23px}.ticket-pick-copy strong{font-size:9px}.ticket-pick-copy small{font-size:7px}}
+
+/* MAJOR VISUAL UPGRADE — premium light-first matchday surface */
+:root { font-family:'DM Sans',system-ui,sans-serif; color:#12243a; background:#f3f7fb; }
+body { background:radial-gradient(circle at 84% -8%,#dceeff 0,transparent 28rem),radial-gradient(circle at 4% 22%,#e5fbf3 0,transparent 25rem),#f3f7fb; }
+.app-frame { background:transparent; }
+.sidebar { width:264px; padding:26px 17px 20px; background:linear-gradient(180deg,#0a1d34 0%,#102c49 62%,#0d574e 140%); border-right:0; box-shadow:18px 0 50px #07315815; }
+.brand { padding:0 11px 38px; color:#fff; }
+.brand-mark { width:44px; height:44px; border-radius:15px; background:linear-gradient(145deg,#e9fff7,#64d1ad); color:#09263d; box-shadow:0 10px 25px #50d1aa35; }
+.brand strong { font-size:12px; letter-spacing:.14em; }
+.brand small { color:#9db7c9; }
+.sidebar-label { color:#7897ae; font-size:9px; letter-spacing:.17em; }
+.nav-item { height:48px; border-radius:13px; color:#b5c8d6; font-size:12px; }
+.nav-item:hover { background:#ffffff12; color:#fff; }
+.nav-item.active { background:linear-gradient(100deg,#35c39e,#178fd0); color:#fff; box-shadow:0 10px 24px #0b9e9a2c; }
+.nav-icon { color:#d3f5e9; }
+.seller-card { background:linear-gradient(145deg,#173d5d,#124c51); border-color:#ffffff20; border-radius:17px; padding:17px; }
+.seller-card-icon { background:#ffffff16; color:#8cf0c5; }
+.seller-card p { color:#a9c2cf; }
+.seller-card button { color:#8cf0c5; }
+.sidebar-foot { color:#7894a8; }
+.main-area { margin-left:264px; }
+.topbar { height:78px; padding:0 48px; background:#ffffffd9; border-bottom-color:#dce7f1; }
+.breadcrumb { color:#8091a6; font-size:11px; }
+.breadcrumb strong { color:#16304c; }
+.top-actions { gap:10px; }
+.login-button { border-color:#cfe0ed; color:#16486a; border-radius:11px; padding:10px 15px; }
+.avatar { background:linear-gradient(145deg,#dff7ee,#cce3ff); color:#176b67; }
+.page-content { max-width:1540px; padding:40px 48px 32px; }
+.welcome-row h1 { font-size:36px; color:#102945; }
+.welcome-copy { color:#71859b; font-size:13px; }
+.primary-button { background:linear-gradient(110deg,#146fe8,#08a77c); border-radius:12px; padding:13px 18px; box-shadow:0 12px 24px #1478bb25; }
+.hero-panel { min-height:322px; border-radius:26px; background:linear-gradient(118deg,#08233f 0%,#0d4c68 52%,#099a79 100%); box-shadow:0 25px 55px #0c41652c; }
+.hero-panel:before { background:radial-gradient(circle at 77% 48%,#80f2cc35,transparent 28%),linear-gradient(90deg,transparent 44%,#ffffff0d); }
+.hero-copy h2 { font-size:42px; }
+.hero-copy h2 em { color:#8df0c2; }
+.hero-copy p { color:#c9dce8; }
+.hero-primary { background:#e8fff4; color:#0b4b4c; border-radius:11px; }
+.hero-secondary { border-radius:11px; }
+.section-heading { margin-top:42px; }
+.section-heading h2 { color:#142b45; font-size:22px; }
+.discovery-grid { gap:18px; }
+.discovery-card { min-height:174px; padding:21px; border-color:#dce7f0; border-radius:18px; box-shadow:0 8px 22px #16436b0a; }
+.discovery-card:hover { border-color:#93d9cd; box-shadow:0 18px 32px #16436b16; }
+.discovery-icon { background:#e1f8f0; color:#0b9075; }
+.community-card .discovery-icon { background:#e6efff; color:#316de0; }
+.sports-card .discovery-icon { background:#fff0d9; color:#bd7625; }
+.discovery-card strong { color:#14314d; font-size:14px; }
+.discovery-card p { color:#73879c; font-size:11px; }
+.discovery-card small { color:#137e73; }
+.home-value-strip>div { border-color:#dce7f0; box-shadow:0 8px 22px #16436b0a; }
+.market-feed-page { max-width:1180px; }
+.market-feed-heading { margin-bottom:20px; }
+.market-feed-heading h1 { color:#102945; font-size:clamp(29px,4vw,42px); }
+.market-feed-heading p { color:#71869a; font-size:13px; }
+.official-banner { padding:16px 18px; border-color:#cee2ef; border-radius:18px; box-shadow:0 10px 25px #16436b0b; }
+.official-avatar { background:linear-gradient(145deg,#146fe8,#0aa87c); }
+.official-tag { background:#e5fbf1; color:#08784f; }
+.demo-notice { border-left-color:#0aa87c; background:#edfbf5; color:#205e4d; padding:12px 14px; border-radius:12px; }
+.market-toolbar { gap:18px; padding:10px 0 4px; }
+.filter-chip { padding:10px 15px; border-color:#d6e3ed; color:#6a7f94; }
+.filter-chip.selected { background:#e7f4ff; border-color:#a8d4fa; color:#146fe8; }
+.feed-section-label { margin-top:19px; color:#15314e; font-size:13px; }
+.feed-listing-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.demo-ticket-card { padding:15px; border-color:#cfe0ed; border-radius:20px; box-shadow:0 14px 34px #0f426b12; }
+.demo-ticket-card:hover { transform:translateY(-3px); box-shadow:0 20px 42px #0f426b1e; }
+.ticket-author-row { padding:0 2px 13px; }
+.ticket-author-row strong { color:#102945; font-size:12px; }
+.ticket-poster { padding:17px; border-radius:17px; background:radial-gradient(ellipse at 90% 4%,#19b88977 0,transparent 38%),linear-gradient(145deg,#061a31 0%,#0b4160 57%,#08735f 100%); box-shadow:inset 0 0 0 1px #ffffff1c,0 14px 30px #0a315026; }
+.ticket-poster-brand { padding-bottom:14px; }
+.poster-brand-mark { width:34px; height:34px; border-radius:11px; background:linear-gradient(140deg,#1687ec,#11b485); font-size:17px; }
+.ticket-poster-brand>div strong { font-size:10px; }
+.ticket-poster-brand>div small { font-size:8px; }
+.poster-demo-tag { padding:5px 8px; font-size:8px; }
+.ticket-poster-heading { padding:15px 0 12px; }
+.ticket-poster-heading>div>small { font-size:8px; }
+.ticket-poster-heading h3 { font-size:16px; }
+.ticket-poster .ticket-pick-row { grid-template-columns:26px 40px minmax(0,1fr) 24px; min-height:64px; gap:10px; padding:9px 11px; border-radius:11px; background:linear-gradient(100deg,#ffffff18,#ffffff0b); }
+.ticket-pick-number { width:24px; height:24px; background:#1987e955; color:#a7ceff; font-size:9px; }
+.team-logo-wrap { width:38px; height:38px; }
+.team-logo-wrap img { width:30px; height:30px; }
+.ticket-pick-copy { gap:4px; }
+.ticket-pick-copy strong { font-size:11px; }
+.ticket-pick-copy small { font-size:9px; }
+.ticket-pick-check { width:22px; height:22px; background:#0baf7535; color:#8ef4c1; }
+.ticket-poster-footer { margin-top:13px; padding-top:12px; }
+.ticket-poster-footer>div:first-child>small { font-size:8px; }
+.ticket-poster-footer>div:first-child>strong { font-size:28px; }
+.poster-match-count strong { font-size:20px; }
+.poster-match-count small { font-size:8px; }
+.ticket-poster-source { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 2px 0; color:#72859a; font-size:8px; letter-spacing:.04em; }
+.ticket-poster-source b { color:#1769e8; font-size:8px; letter-spacing:.08em; }
+.demo-social-actions { grid-template-columns:1fr 1fr 1.35fr 1.35fr; gap:6px; margin-top:10px; padding-top:11px; }
+.social-action { min-height:38px; border:1px solid #dce7f0; background:#f8fbfe; color:#4f6780; font-size:9px; }
+.social-action:hover { border-color:#91c8f4; background:#edf6ff; color:#146fe8; }
+.ticket-export { background:#eaf7f2; border-color:#c7eadc; color:#08784f; }
+.ticket-export>span { color:#0a9b6b; }
+.ticket-share { background:#eaf2ff; border-color:#c8dcf7; color:#146fe8; }
+.ticket-share>span { color:#146fe8; }
+.demo-comment-box { background:#f7fbff; border-color:#dbe8f2; }
+.page-footer { border-top-color:#dce7ef; }
+@media (max-width:1100px) { .sidebar { width:236px; } .main-area { margin-left:236px; } .page-content { padding-left:32px; padding-right:32px; } }
+@media (max-width:900px), (hover:none) and (pointer:coarse) { .sidebar { width:min(86vw,320px); } .main-area { margin-left:0; } .page-content { padding:24px 16px 22px; } .feed-listing-grid { grid-template-columns:1fr; } .demo-social-actions { grid-template-columns:repeat(2,minmax(0,1fr)); } .ticket-export,.ticket-share { grid-column:span 1; } }
+@media (min-width:761px) and (max-width:900px) { .feed-listing-grid { grid-template-columns:1fr 1fr; } .demo-social-actions { grid-template-columns:1fr 1fr; } .ticket-export,.ticket-share { grid-column:span 1; } }
+@media (max-width:420px) { .page-content { padding-left:12px; padding-right:12px; } .market-feed-heading h1 { font-size:28px; } .demo-ticket-card { padding:10px; border-radius:17px; } .ticket-poster { padding:12px; } .ticket-poster-heading h3 { font-size:14px; } .ticket-poster .ticket-pick-row { grid-template-columns:22px 34px minmax(0,1fr) 20px; gap:7px; min-height:57px; padding:7px; } .team-logo-wrap { width:33px; height:33px; } .team-logo-wrap img { width:26px; height:26px; } .ticket-pick-copy strong { font-size:10px; } .ticket-pick-copy small { font-size:8px; } .ticket-poster-source { align-items:flex-start; flex-direction:column; gap:4px; } .demo-social-actions { grid-template-columns:1fr 1fr; } .ticket-export,.ticket-share { grid-column:1 / -1; } }

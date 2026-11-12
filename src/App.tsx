@@ -247,16 +247,124 @@ function App() {
     setNotice('Maoni ya mfano yameongezwa kwenye chapisho hili.');
   };
 
-  const shareDemoTicket = async (ticket: DemoTicket) => {
-    const shareText = ticket.title + '\\n' + ticket.selections.map((selection, index) => (index + 1) + '. ' + selection).join('\\n') + '\\nOdds za mfano: ' + ticket.sampleOdds + '\\nMfano tu — si odds za live.';
+  const exportDemoTicket = async (ticket: DemoTicket, shouldShare = false) => {
+    const loadLogo = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
+      if (!src) { resolve(null); return; }
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
+    const width = 1200;
+    const rowHeight = 126;
+    const height = 330 + ticket.selections.length * rowHeight + 260;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Kifaa hakiwezi kutengeneza PNG.');
+    const background = context.createLinearGradient(0, 0, width, height);
+    background.addColorStop(0, '#071b31');
+    background.addColorStop(0.55, '#103c58');
+    background.addColorStop(1, '#0c765f');
+    context.fillStyle = background;
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = '#ffffff12';
+    context.beginPath();
+    context.arc(width - 40, 90, 220, 0, Math.PI * 2);
+    context.stroke();
+    context.fillStyle = '#ffffff';
+    context.font = '800 42px Arial';
+    context.fillText('WAZEE WA BETTING TZ', 62, 80);
+    context.fillStyle = '#9ee4c6';
+    context.font = '800 22px Arial';
+    context.fillText('UWANJA WA MIKeka  ·  TICKET PREVIEW', 64, 120);
+    context.fillStyle = '#f5c36d';
+    context.font = '900 17px Arial';
+    context.fillText('DEMO — SI ODDS ZA LIVE', 64, 165);
+    context.fillStyle = '#ffffff18';
+    context.fillRect(60, 196, width - 120, 1);
+    context.fillStyle = '#ffffff';
+    context.font = '800 30px Arial';
+    context.fillText(ticket.title.toUpperCase(), 64, 245);
+    context.fillStyle = '#c7d9e3';
+    context.font = '18px Arial';
+    context.fillText('Kickoff: haijaunganishwa  ·  Ligi: data ya mfano  ·  Status: PENDING', 64, 278);
+    const logos = await Promise.all(ticket.selections.map((selection) => loadLogo(getDemoTeam(selection).logo)));
+    ticket.selections.forEach((selection, index) => {
+      const y = 310 + index * rowHeight;
+      const team = getDemoTeam(selection);
+      context.fillStyle = '#ffffff14';
+      context.beginPath();
+      context.roundRect(56, y, width - 112, 100, 16);
+      context.fill();
+      context.fillStyle = '#87bfff';
+      context.font = '900 20px Arial';
+      context.fillText(String(index + 1).padStart(2, '0'), 79, y + 39);
+      context.fillStyle = '#ffffff';
+      context.beginPath();
+      context.arc(154, y + 50, 30, 0, Math.PI * 2);
+      context.fill();
+      if (logos[index]) context.drawImage(logos[index] as HTMLImageElement, 130, y + 26, 48, 48);
+      else {
+        context.fillStyle = '#1c6f67';
+        context.font = '900 24px Arial';
+        context.fillText('⚽', 136, y + 59);
+      }
+      context.fillStyle = '#f7fbff';
+      context.font = '800 24px Arial';
+      context.fillText(team.name, 215, y + 40);
+      context.fillStyle = '#b7cfdb';
+      context.font = '18px Arial';
+      context.fillText(selection.slice(team.name === 'Timu' ? 0 : team.name.length).trim() || selection, 215, y + 71);
+      context.fillStyle = '#9ee4c6';
+      context.font = '900 26px Arial';
+      context.textAlign = 'right';
+      context.fillText('—', width - 88, y + 55);
+      context.textAlign = 'left';
+    });
+    const summaryY = 330 + ticket.selections.length * rowHeight;
+    context.fillStyle = '#f7fbff';
+    context.beginPath();
+    context.roundRect(56, summaryY, width - 112, 150, 16);
+    context.fill();
+    context.fillStyle = '#6a7b8d';
+    context.font = '800 18px Arial';
+    context.fillText('TOTAL ODDS · DEMO', 86, summaryY + 45);
+    context.fillStyle = '#0e6b61';
+    context.font = '900 52px Arial';
+    context.fillText(ticket.sampleOdds, 86, summaryY + 105);
+    context.fillStyle = '#526478';
+    context.font = '800 20px Arial';
+    context.textAlign = 'right';
+    context.fillText(`${ticket.selections.length} MECHI`, width - 86, summaryY + 62);
+    context.fillText('HAKUNA BET ILIYOWEKWA', width - 86, summaryY + 100);
+    context.textAlign = 'left';
+    context.fillStyle = '#d7f4e5';
+    context.font = '800 18px Arial';
+    context.fillText('Cheza kwa uwajibikaji · Taarifa hii ni DEMO ya muundo', 64, height - 42);
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('PNG haikutengenezwa.')), 'image/png'));
+    const file = new File([blob], `wazee-wa-betting-tz-demo-${ticket.id}.png`, { type: 'image/png' });
     try {
-      if (navigator.share) await navigator.share({ title: 'Wazee wa Betting TZ', text: shareText, url: window.location.href });
-      else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(shareText + '\\n' + window.location.href); setNotice('Kiungo na maelezo ya mkeka vimenakiliwa.'); }
-      else setNotice('Kifaa hiki hakiruhusu kushare moja kwa moja kwa sasa.');
+      if (shouldShare && navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: 'Wazee wa Betting TZ · DEMO', files: [file] });
+        setNotice('PNG ya mkeka imeshirikishwa.');
+      } else {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = file.name;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        setNotice(shouldShare ? 'Kifaa hiki hakiruhusu share ya file; PNG imepakuliwa.' : 'PNG ya mkeka imepakuliwa.');
+      }
     } catch (error) {
       if ((error as Error).name !== 'AbortError') setNotice('Imeshindikana kushare. Jaribu tena.');
     }
   };
+
+  const shareDemoTicket = async (ticket: DemoTicket) => exportDemoTicket(ticket, true);
 
   const toggleLike = async (postId: string) => {
     if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kuweka like.'); return; }
@@ -400,10 +508,12 @@ function App() {
             </div>; })}</div>
             <div className="ticket-poster-footer"><div><small>ODDS JUMLA (MFANO)</small><strong>{ticket.sampleOdds}</strong></div><div className="poster-match-count"><strong>{ticket.selections.length}</strong><small>MECHI</small></div><span className="poster-watermark">WBTZ</span></div>
           </div>
+          <div className="ticket-poster-source"><span>ODDS, LOGOS NA MATOKEO HALISI HUONYESHWA TU ZIKIPATIKANA</span><b>DEMO PREVIEW</b></div>
           <div className="demo-social-actions">
             <button className={demoLiked.includes(ticket.id) ? 'social-action is-liked' : 'social-action'} onClick={() => toggleDemoLike(ticket.id)} aria-pressed={demoLiked.includes(ticket.id)}><span>♥</span> Like <small>{demoLiked.includes(ticket.id) ? '1' : '0'}</small></button>
             <button className="social-action" onClick={() => { setDemoCommentOpen(demoCommentOpen === ticket.id ? null : ticket.id); setDemoCommentDraft(''); }}><span>▢</span> Maoni <small>{(demoComments[ticket.id] || []).length}</small></button>
-            <button className="social-action" onClick={() => void shareDemoTicket(ticket)}><span>↗</span> Shiriki</button>
+            <button className="social-action ticket-export" onClick={() => void exportDemoTicket(ticket)}><span>↓</span> DOWNLOAD PNG</button>
+            <button className="social-action ticket-share" onClick={() => void shareDemoTicket(ticket)}><span>↗</span> SHARE IMAGE</button>
           </div>
           {demoCommentOpen === ticket.id && <div className="demo-comment-box">
             {(demoComments[ticket.id] || []).map((comment, index) => <p className="demo-comment-item" key={index}><strong>Mwanachama:</strong> {comment}</p>)}
