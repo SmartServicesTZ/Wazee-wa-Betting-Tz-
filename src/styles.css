@@ -109,3 +109,29 @@
 
 
 .follow-button{margin-left:auto;border:1px solid #dce9e4;background:#f7fbf9;color:#367b70;border-radius:7px;padding:7px 10px;font-size:9px;font-weight:800}
+
+
+.profile-name-button{border:0;background:transparent;padding:0;color:#34475d;font-size:11px;font-weight:800;text-align:left}
+.profile-name-button:hover{color:#347d72;text-decoration:underline}
+.member-profile-card{position:relative;width:min(100%,540px);max-height:min(88vh,850px);overflow:auto;background:#fff;border:1px solid #e8edf2;border-radius:18px;padding:26px;box-shadow:0 24px 80px #13283b35}
+.member-profile-head{display:flex;align-items:center;gap:14px;padding:5px 0 15px}
+.member-avatar{width:58px;height:58px;display:grid;place-items:center;overflow:hidden;border-radius:18px;background:#e7f2ee;color:#347b70;font-family:Manrope,sans-serif;font-size:24px;font-weight:800}
+.member-avatar img{width:100%;height:100%;object-fit:cover}
+.member-profile-head h2{font-family:Manrope,sans-serif;color:#2d4055;font-size:22px;margin:5px 0}
+.profile-role{font-size:9px;color:#7d8b99;text-transform:capitalize}
+.member-bio{font-size:11px;color:#758397;line-height:1.7;margin:6px 0 17px}
+.member-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.member-stats>div{padding:11px 8px;border:1px solid #e8eef1;border-radius:9px;background:#fbfcfd;text-align:center}
+.member-stats strong,.member-stats small{display:block}
+.member-stats strong{font-family:Manrope,sans-serif;font-size:18px;color:#347d72}
+.member-stats small{font-size:8px;color:#8b98a6;margin-top:3px}
+.profile-record{font-size:9px;color:#7e8b9b;margin:12px 0}
+.profile-edit-form{border-top:1px solid #edf1f3;margin-top:18px;padding-top:17px}
+.profile-edit-form h3{font-family:Manrope,sans-serif;font-size:14px;color:#33465a;margin:0 0 12px}
+.profile-edit-form label{display:grid;gap:6px;font-size:10px;color:#6f7e90;font-weight:750;margin:10px 0}
+.profile-edit-form input,.profile-edit-form textarea{width:100%;border:1px solid #e1e8ed;border-radius:8px;padding:10px;font:inherit;font-size:10px;color:#33465a}
+.profile-edit-form textarea{min-height:75px;resize:vertical}
+.profile-follow{width:100%;margin-top:17px}
+@media(max-width:560px){.member-profile-card{padding:22px 17px}.member-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.avatar-button{border:0;cursor:pointer;font:inherit}

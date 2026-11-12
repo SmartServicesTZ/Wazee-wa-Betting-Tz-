@@ -19,7 +19,9 @@ The Worker verifies Firebase ID-token signature, issuer, audience and expiry aga
 - `GET /api/v1/sports/fixtures` — stored fixtures with provider and freshness metadata.
 - `GET /api/v1/sports/results` — stored results with source metadata.
 - `GET /api/v1/sports/odds?fixture_id=:id` — odds snapshots for a fixture.
-- `GET /api/v1/community/posts` — public community feed.
+- `GET /api/v1/community/posts` — public community feed; authenticated requests include current follow state.
+- `GET /api/v1/users/:id/profile` — public member profile and aggregate counters.
+- `PUT /api/v1/me/profile` — authenticated profile edit (display name, bio, HTTPS avatar URL).
 - `GET /api/v1/me` — authenticated profile bootstrap.
 - `POST /api/v1/community/posts` — authenticated post creation.
 - `PUT /api/v1/community/posts/:id/like` — authenticated like toggle.
