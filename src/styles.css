@@ -153,3 +153,53 @@
 .league-card strong{font-size:10px;color:#405168}
 .league-card small{font-size:8px;color:#909ca9}
 @media(max-width:760px){.league-grid{grid-template-columns:1fr 1fr}.result-teams strong{font-size:10px}.result-teams b{font-size:16px}}
+
+
+/* Wazee visual refresh — editorial sports marketplace */
+:root{color:#17243a;background:#f4f6fa;font-family:'DM Sans',sans-serif}
+body{background:radial-gradient(ellipse at 86% 0%,#fcefe8 0,transparent 30%),#f4f6fa}
+.sidebar{background:#111c2d;color:#fff;border:0;padding-top:25px;box-shadow:12px 0 35px #12243b0b}
+.brand{color:#fff;padding-bottom:42px}.brand-mark{background:linear-gradient(145deg,#ff8a5b,#e9573f);box-shadow:0 8px 22px #f06b4b35;border-radius:13px}
+.brand strong{font-size:12px;letter-spacing:.13em}.brand small{color:#a9b6c8;letter-spacing:.2em}
+.sidebar-label{color:#7f91a9}.nav-item{color:#b2bfd0;border-radius:10px;height:45px}.nav-item:hover{background:#ffffff10;color:#fff}.nav-item.active{background:linear-gradient(100deg,#ff8056,#f06449);color:#fff;box-shadow:0 8px 18px #f0644933}
+.seller-card{background:linear-gradient(145deg,#1e3046,#17273c);border-color:#ffffff18;color:#fff}.seller-card p{color:#b4c0d0}.seller-card-icon{background:#ffffff18;color:#ff9a72}.seller-card button{color:#ff9a72}.sidebar-foot{color:#8292a7}
+.main-area{background:transparent}.topbar{background:#f9fafceF;border-color:#e7eaf0;padding-left:38px;padding-right:38px}.breadcrumb{color:#8b96a8}.breadcrumb strong{color:#26354c}
+.page-content{max-width:1500px;padding-top:31px}.welcome-row{margin-bottom:22px}.eyebrow{color:#df684d}.eyebrow-dot{background:#f07855;box-shadow:0 0 0 4px #ffe8df}.welcome-row h1{font-size:32px;color:#14233a;letter-spacing:-.055em}.welcome-copy{font-size:13px;color:#77859a}
+.primary-button{background:#f06b4d;box-shadow:0 7px 18px #ed704a30;border-radius:10px;padding:13px 18px}.primary-button:hover,.hero-primary:hover{filter:brightness(.96);transform:translateY(-1px)}
+.hero-panel{min-height:315px;border-radius:23px;background:linear-gradient(112deg,#14243a 0%,#203b58 58%,#4b566d 100%);padding:42px 45px;box-shadow:0 18px 42px #1b2c441f}
+.hero-panel:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 77% 48%,#fa87552c,transparent 29%),linear-gradient(90deg,transparent 50%,#ffffff06);pointer-events:none}
+.hero-panel:after{border-color:#ffffff20;right:9%;top:-40%;box-shadow:0 0 0 32px #ffffff09,0 0 0 65px #ffffff06}
+.hero-kicker{color:#ffb18e;font-size:10px;letter-spacing:.2em}.hero-copy{max-width:560px}.hero-copy h2{font-size:38px;line-height:1.12;letter-spacing:-.06em}.hero-copy h2 em{color:#ff9a76}.hero-copy p{font-size:13px;color:#d1d9e3;line-height:1.75}.hero-primary{background:#ff936d;color:#321f20;border-radius:9px;padding:13px 17px}.hero-secondary{border-color:#ffffff55;border-radius:9px;padding:13px 17px}.ball{font-size:102px;filter:drop-shadow(0 18px 20px #08172780)}.floating-card{border-radius:12px;box-shadow:0 14px 30px #08172755}.floating-card>span{background:#fff0e9;color:#e56b4c}.hero-index{color:#ffc1a8}
+.section-heading{margin-top:37px}.section-heading h2{font-size:21px;color:#17263c}.section-overline{color:#e16b4d;letter-spacing:.16em}
+.discovery-grid{gap:16px}.discovery-card{border:1px solid #e6e9ef;border-radius:17px;padding:20px;min-height:170px;box-shadow:0 5px 18px #23344c08}.discovery-card:hover{box-shadow:0 16px 30px #23344c12;transform:translateY(-3px);border-color:#f2c4b6}.discovery-icon{width:38px;height:38px;border-radius:12px;background:#fff0e9;color:#e56b4c}.community-card .discovery-icon{background:#f1edff;color:#7c65c2}.sports-card .discovery-icon{background:#eaf5f0;color:#438b70}.discovery-card strong{font-size:13px;color:#1e2d43}.discovery-card p{font-size:11px;color:#7e8b9d;line-height:1.65}.discovery-card small{color:#e06b4e}
+.filter-chip{padding:9px 14px;border-color:#e5e8ee;color:#6e7c91}.filter-chip.selected{background:#fff0e9;border-color:#ffd7ca;color:#d95e41}
+.empty-market{border:1px dashed #e4d8d2;background:#fffaf8;border-radius:15px;padding:20px}.empty-illustration{background:#fff0e9;color:#e16b4d}.empty-market strong{font-size:12px}.empty-market p{font-size:11px}
+.module-intro h2{font-size:29px;letter-spacing:-.055em}.module-intro p{font-size:12px}.source-badge{background:#fff5ec;color:#c36b3f;border-color:#f6e1d3}
+.composer,.post-card,.aside-card,.builder-form,.builder-slip,.seller-benefits,.seller-form,.admin-tile{border-radius:16px;box-shadow:0 5px 18px #23344c08;border-color:#e7eaf0}
+.post-card{padding:19px}.post-card>p{font-size:12px}.composer{padding:18px}.sports-tab.active{color:#e06447;border-color:#f07855}
+.builder-form,.builder-slip,.seller-form{padding:23px}.builder-form h3,.builder-slip h3,.seller-form h3{font-size:16px;color:#1e2e44}.builder-form input,.builder-form select,.seller-form input,.seller-form textarea,.search-input{border-radius:10px;background:#fbfcfe}
+.outline-button{border-color:#f2d4c9;color:#d96447;border-radius:9px}.seller-benefits{padding:26px}.seller-symbol{background:#fff0e9;color:#e56b4c}
+.admin-tile{padding:18px}.admin-tile>span{color:#e36b4e}.admin-tile strong{font-size:12px}.admin-warning{border:1px solid #f5e4d2;border-radius:12px}
+.admin-stat{border-radius:14px!important;box-shadow:0 5px 18px #23344c08}
+.notice-bar{background:#17283e;border-radius:13px}
+.page-footer{color:#929db0}
+.home-value-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:22px 0 6px}
+.home-value-strip>div{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e8eaf0;border-radius:14px;padding:15px;min-width:0}
+.value-icon{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;background:#fff0e9;color:#e36b4e;font-size:10px;font-weight:900}
+.home-value-strip strong,.home-value-strip small{display:block}.home-value-strip strong{font-size:11px;color:#26364b}.home-value-strip small{font-size:9px;color:#8995a6;margin-top:4px;line-height:1.4}
+.home-feature-band{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;align-items:center;margin:30px 0 8px;padding:26px 28px;border-radius:18px;background:#fff;border:1px solid #e8eaf0}
+.home-feature-band h2{font-family:Manrope,sans-serif;font-size:21px;line-height:1.25;letter-spacing:-.045em;color:#1a2a40;margin:8px 0}
+.home-feature-band p{font-size:11px;line-height:1.7;color:#7f8b9c;max-width:440px;margin:0}
+.home-steps{display:grid;gap:10px}.home-steps>div{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;background:#f7f8fb}
+.home-steps b{font-size:10px;color:#e16b4d}.home-steps strong,.home-steps small{display:block}.home-steps strong{font-size:10px;color:#2b3b51}.home-steps small{font-size:9px;color:#8a96a6;margin-top:3px}
+@media(max-width:1100px){.sidebar{width:220px}.main-area{margin-left:220px}.hero-panel{padding:34px}.hero-copy h2{font-size:34px}}
+@media(max-width:760px){
+ .sidebar{background:#111c2d}.topbar{padding:0 14px}.page-content{padding:22px 14px 18px}
+ .welcome-row h1{font-size:26px}.welcome-copy{font-size:11px}
+ .hero-panel{min-height:300px;padding:27px 21px;border-radius:18px}.hero-copy h2{font-size:29px;max-width:330px}.hero-copy p{font-size:11px;max-width:290px}.hero-art{right:-125px;top:70px;opacity:.2}.hero-primary,.hero-secondary{padding:11px 12px;font-size:9px}
+ .section-heading{margin-top:29px}.section-heading h2{font-size:18px}.discovery-grid{grid-template-columns:1fr;gap:10px}.discovery-card{min-height:130px;padding:16px}
+ .home-value-strip{grid-template-columns:1fr;gap:8px;margin-top:15px}.home-value-strip>div{padding:12px}.home-feature-band{grid-template-columns:1fr;gap:18px;padding:20px;margin-top:22px}.home-feature-band h2{font-size:19px}
+ .mobile-bottom-nav{background:#111c2d;border-color:#26364a}.mobile-bottom-nav button{color:#a5b2c4}.mobile-bottom-nav button.mobile-active{color:#ff9b79}
+ .module-intro h2{font-size:24px}.admin-grid{grid-template-columns:1fr 1fr}
+}
+@media(min-width:761px) and (max-width:1100px){.home-value-strip{grid-template-columns:1fr}.home-feature-band{grid-template-columns:1fr}}
