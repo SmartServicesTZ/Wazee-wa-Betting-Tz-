@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [foundation/**]
+    branches: [main, foundation/**]
 
 permissions:
   contents: read
@@ -31,3 +31,11 @@ jobs:
         run: node --check worker/preview.js && node --check worker/auth.js
       - name: Production build
         run: npm run build
+
+      - name: Upload production build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wazee-pages-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 3
