@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@firebase/app": "0.16.5",
+    "@firebase/auth": "1.13.9"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",
