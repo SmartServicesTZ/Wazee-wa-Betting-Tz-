@@ -141,3 +141,7 @@
 .market-search-controls .search-input{width:240px}
 .market-sort{border:1px solid #e4eaf0;background:#fff;border-radius:9px;padding:10px 12px;font:inherit;font-size:10px;color:#607086}
 @media(max-width:760px){.market-search-controls{width:100%;flex-direction:column;align-items:stretch}.market-search-controls .search-input{width:100%}.market-sort{width:100%}}
+
+
+.fixture-add-button{border:1px solid #dce9e4;background:#f7fbf9;color:#347b70;border-radius:7px;padding:7px 10px;font-size:9px;font-weight:800;white-space:nowrap}
+@media(max-width:760px){.fixture-add-button{align-self:flex-end}}
