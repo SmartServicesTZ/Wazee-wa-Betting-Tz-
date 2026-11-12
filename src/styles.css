@@ -85,3 +85,17 @@
 .fixture-foot{border-top:1px solid #eef2f4;padding-top:10px}
 .fixture-foot>span{font-size:8px;text-transform:uppercase;font-weight:800;color:#718293}
 @media(max-width:760px){.fixture-card{padding:12px}.fixture-teams strong{font-size:11px}.fixture-foot{align-items:flex-start;flex-direction:column}}
+
+
+.seller-picks{margin:16px 0;padding:13px;background:#f8fafb;border:1px solid #e9eff1;border-radius:10px}
+.seller-picks h4{font-family:Manrope,sans-serif;color:#405269;font-size:11px;margin:0 0 10px}
+.seller-pick-fields{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.seller-pick-fields input,.seller-pick-fields select{min-width:0;width:100%;border:1px solid #e1e8ed;background:#fff;border-radius:7px;padding:9px;font:inherit;font-size:10px;color:#43546a}
+.seller-pick-fields .outline-button{margin:0;padding:8px;font-size:9px}
+.seller-pick-row{display:grid;grid-template-columns:1fr auto 22px;align-items:center;gap:8px;border-top:1px solid #e9eef1;padding:8px 0;margin-top:7px}
+.seller-pick-row span{font-size:9px;color:#45576c;font-weight:700}
+.seller-pick-row small{font-size:8px;color:#8794a2}
+.seller-pick-row button{border:0;background:transparent;color:#a36b65;font-size:17px}
+.admin-selection-list{padding-left:18px;margin:8px 0;color:#728094;font-size:9px;line-height:1.8}
+.admin-selection-list strong{color:#3d6f67}
+@media(max-width:760px){.seller-pick-fields{grid-template-columns:1fr}.seller-pick-row{grid-template-columns:1fr 20px}.seller-pick-row small{grid-column:1}.seller-pick-row button{grid-column:2;grid-row:1}}

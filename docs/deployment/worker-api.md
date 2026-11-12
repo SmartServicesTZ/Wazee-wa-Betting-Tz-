@@ -29,10 +29,11 @@ The Worker verifies Firebase ID-token signature, issuer, audience and expiry aga
 - `POST /api/v1/seller-applications` — authenticated seller application.
 - `GET /api/v1/seller-applications/me` — authenticated application status.
 - `GET /api/v1/seller/listings/me` — seller's own listings.
-- `POST /api/v1/seller/listings` — seller-only listing submission; status starts as `pending_review`.
+- `POST /api/v1/seller/listings` — seller-only listing submission with up to 30 match selections; status starts as `pending_review`.
+- `GET /api/v1/seller/listings/me` — seller's own listings and saved selections.
 - `GET /api/v1/admin/seller-applications` — admin-only seller queue.
 - `POST /api/v1/admin/seller-applications/:id/decision` — admin-only approve/reject.
-- `GET /api/v1/admin/listings` — admin-only pending listing queue.
+- `GET /api/v1/admin/listings` — admin-only pending listing queue, including full descriptions and selections for moderation.
 - `POST /api/v1/admin/listings/:id/decision` — admin-only publish/reject.
 
 All protected endpoints require `Authorization: Bearer <Firebase ID token>`. The Worker resolves user roles from D1 and never trusts a client-supplied role. Moderation decisions are audited.
