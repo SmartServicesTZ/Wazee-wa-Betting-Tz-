@@ -32,9 +32,10 @@ An independent hybrid marketplace combining:
 
 ## Owner actions still required
 
-1. **First Admin:** create/sign in to the intended owner account, then confirm the Firebase UID so it can be promoted to Admin through a controlled, audited D1 operation. No account is automatically promoted.
-2. **Sports provider:** create an API-Football free account, test Tanzanian/CAF league and odds coverage, then provide the API key through Cloudflare Worker secrets. Do not send the key in chat or commit it to Git.
-3. **Payments and regulation:** obtain written provider approval and Tanzanian regulatory/legal clarification before enabling paid tips, checkout, commission collection, wallet funding or withdrawals.
+1. **Firebase owner setup:** confirm Email/Password sign-in is enabled and add `wazee-wa-betting-tz.pages.dev` to Firebase Auth authorized domains. The login form uses phone + password; SMS ownership verification is not yet enabled.
+2. **First Admin:** create/sign in to the intended owner account, then confirm the Firebase UID so it can be promoted to Admin through a controlled, audited D1 operation. No account is automatically promoted.
+3. **Sports provider:** create an API-Football free account, test Tanzanian/CAF league and odds coverage, then provide the API key through Cloudflare Worker secrets. Do not send the key in chat or commit it to Git.
+4. **Payments and regulation:** obtain written provider approval and Tanzanian regulatory/legal clarification before enabling paid tips, checkout, commission collection, wallet funding or withdrawals.
 
 ## Payment and compliance safety
 
