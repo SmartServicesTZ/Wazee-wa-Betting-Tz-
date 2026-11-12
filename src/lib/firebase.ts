@@ -66,6 +66,9 @@ export async function apiRequest<T>(path: string, user?: User | null, init: Requ
       seller_approval_required: "Subiri Admin aidhinishe akaunti yako ya seller.",
       admin_required: "Huna ruhusa ya kufungua sehemu hii.",
       account_suspended: "Akaunti yako imesimamishwa. Wasiliana na msaada.",
+      admin_account_protected: "Huwezi kusimamisha akaunti ya Admin au akaunti yako mwenyewe.",
+      account_status_invalid: "Hali ya akaunti haijatambuliwa.",
+      user_not_found: "Mtumiaji hajapatikana.",
     };
     throw new Error((data as { error?: string }).error ? messages[(data as { error: string }).error] || (data as { error: string }).error : "Ombi halikukamilika.");
   }

@@ -13,7 +13,7 @@ An independent hybrid marketplace combining:
 - Social community with public posts, likes, comments and follows
 - Sports fixtures, odds, results and ticket builder
 - Seller applications, listing creation and moderation
-- Admin dashboard and audit trail
+- Admin dashboard with system metrics, seller/listing moderation, user status controls and audit trail
 - Future wallet and payouts, disabled until legal/provider approval
 
 ## Live platform foundation

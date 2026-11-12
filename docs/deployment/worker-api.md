@@ -31,6 +31,10 @@ The Worker verifies Firebase ID-token signature, issuer, audience and expiry aga
 - `GET /api/v1/seller/listings/me` — seller's own listings.
 - `POST /api/v1/seller/listings` — seller-only listing submission with up to 30 match selections; status starts as `pending_review`.
 - `GET /api/v1/seller/listings/me` — seller's own listings and saved selections.
+- `GET /api/v1/admin/summary` — admin-only system counters.
+- `GET /api/v1/admin/users` — admin-only user directory.
+- `POST /api/v1/admin/users/:id/status` — suspend/reactivate buyer or seller accounts; Admin accounts and self-suspension are blocked.
+- `GET /api/v1/admin/audit-events` — admin-only recent audit events.
 - `GET /api/v1/admin/seller-applications` — admin-only seller queue.
 - `POST /api/v1/admin/seller-applications/:id/decision` — admin-only approve/reject.
 - `GET /api/v1/admin/listings` — admin-only pending listing queue, including full descriptions and selections for moderation.
