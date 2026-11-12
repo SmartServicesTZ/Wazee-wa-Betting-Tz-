@@ -386,7 +386,7 @@ function App() {
             {(demoComments[ticket.id] || []).map((comment, index) => <p className="demo-comment-item" key={index}><strong>Mwanachama:</strong> {comment}</p>)}
             <form onSubmit={(event) => { event.preventDefault(); submitDemoComment(ticket.id); }}><input value={demoCommentDraft} onChange={(event) => setDemoCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={300} /><button type="submit" disabled={!demoCommentDraft.trim()}>Tuma</button></form>
             <small>Maoni haya ni ya majaribio na yanabaki kwenye kifaa hiki kwa muda wa ukurasa.</small>
-          </div>
+          </div>}
         </article>)}
         {filteredListings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name} · {listing.selection_count || 0} selections</small></div></article>)}
       </div>
