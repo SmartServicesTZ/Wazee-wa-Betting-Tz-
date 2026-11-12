@@ -186,7 +186,8 @@ function App() {
 
   const downloadTicket = async () => {
     if (!picks.length) return;
-    const escapeXml = (value: string) => value.replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' })[character] || character);
+    const xmlEntities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' };
+    const escapeXml = (value: string) => value.replace(/[&<>\"']/g, (character) => xmlEntities[character] || character);
     const width = 1000;
     const rowHeight = 86;
     const height = 260 + picks.length * rowHeight;
