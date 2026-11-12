@@ -1,50 +1,59 @@
 # Wazee wa Betting TZ — Hybrid Marketplace
 
-Live preview: https://wazee-wa-betting-tz.stewardjackson999.workers.dev
+**Live website:** https://wazee-wa-betting-tz.pages.dev/
 
-Repository: https://github.com/SmartServicesTZ/Wazee-wa-Betting-Tz-
+**Backend API:** https://wazee-wa-betting-tz.stewardjackson999.workers.dev
+
+**Repository:** https://github.com/SmartServicesTZ/Wazee-wa-Betting-Tz-
 
 ## Product direction
 
 An independent hybrid marketplace combining:
-- Buyer marketplace for verified tipsters and published tips
-- Social community and profiles
+- Buyer marketplace for seller-approved, reviewed tips
+- Social community with public posts, likes, comments and follows
 - Sports fixtures, odds, results and ticket builder
-- Seller applications and seller listings
-- Admin moderation and reporting
+- Seller applications, listing creation and moderation
+- Admin dashboard and audit trail
 - Future wallet and payouts, disabled until legal/provider approval
 
-## Current live capabilities
+## Live platform foundation
 
-- Light-first responsive interface and navigation
-- Firebase phone/password registration and login using the existing Firebase project
-- Cloudflare Worker API with Firebase ID-token verification
-- Cloudflare D1 database with 15 initial tables
-- Authenticated community post creation and public feed
+- Responsive React + TypeScript interface on Cloudflare Pages
+- Firebase phone/password registration and login; no Google login
+- Cloudflare Worker API verifies Firebase ID tokens
+- Cloudflare D1 database with the initial marketplace, identity, social, sports and ledger tables
+- Public marketplace listing feed
+- Authenticated community post creation
 - Authenticated seller applications
-- Seller/listing moderation API contracts and admin role gate
+- Seller role granted only after Admin approval
+- Seller listing submissions enter pending review; Admin publication is required
+- Server-side admin authorization and audit events for moderation
 - No fabricated fixtures, odds, results, tips, seller ratings or wallet balances
 
-## Current limitations / owner gates
+## Owner actions still required
 
-- Sports API key and league coverage verification are pending.
-- The first admin Firebase UID must be confirmed by the owner and promoted safely in D1.
-- Paid tips, wallet funding, marketplace purchases, 10% commission collection and withdrawals remain disabled pending written provider approval and Tanzanian regulatory clarification.
-- FimiPay's public terms require prior written approval for marketplaces/multi-seller settlement and restrict unlicensed gambling/betting. See docs/compliance/payments-and-tanzania.md.
-- The Cloudflare Pages GitHub integration is created but has not produced a deployment; the active public preview is served by the dedicated Worker URL above.
+1. **First Admin:** create/sign in to the intended owner account, then confirm the Firebase UID so it can be promoted to Admin through a controlled, audited D1 operation. No account is automatically promoted.
+2. **Sports provider:** create an API-Football free account, test Tanzanian/CAF league and odds coverage, then provide the API key through Cloudflare Worker secrets. Do not send the key in chat or commit it to Git.
+3. **Payments and regulation:** obtain written provider approval and Tanzanian regulatory/legal clarification before enabling paid tips, checkout, commission collection, wallet funding or withdrawals.
+
+## Payment and compliance safety
+
+- No live money movement, checkout, buyer purchases, deposits, commission deductions, seller payouts or withdrawals are enabled.
+- The proposed 10% platform commission and TSh 2,000 minimum withdrawal are not active transaction rules.
+- FimiPay public terms require enhanced review and prior written approval for marketplace/multi-seller settlement; acceptance of paid betting-tip marketplaces is not verified.
+- Firebase remains on Spark; no billing upgrade or payment method has been added.
+- No production Firestore writes or migrations are performed.
+- No changes are made to the legacy repository or its data.
 
 ## Infrastructure
 
-- Cloudflare Worker: wazee-wa-betting-tz
-- Cloudflare D1: wazee-wa-betting-tz-db
-- Firebase Auth project: wazee-wa-betting-tz-e7183
-- Worker config: wrangler.jsonc
-- D1 schema: worker/migrations/0001_initial.sql
+- Cloudflare Pages project: `wazee-wa-betting-tz`
+- Cloudflare Worker: `wazee-wa-betting-tz`
+- Cloudflare D1: `wazee-wa-betting-tz-db`
+- Firebase Auth project: `wazee-wa-betting-tz-e7183`
+- Worker configuration: `wrangler.jsonc`
+- D1 schema: `worker/migrations/0001_initial.sql`
 
-## Safety
+## Quality gates
 
-- The legacy repository and its Firebase Firestore data are untouched.
-- Firebase remains on Spark; no billing was enabled and no payment method was added.
-- No real-money payment or withdrawal endpoints are enabled.
-- No production Firebase Firestore writes or migrations.
-- Secrets must never be committed to this repository.
+Changes are developed on feature branches. CI runs TypeScript typecheck, Worker syntax validation and production build. Production deployment is verified separately from CI. Never claim a feature is live until its production deployment has been confirmed.
