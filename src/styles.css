@@ -58,3 +58,16 @@
 .seller-listing-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #edf1f4}
 .seller-listing-row strong{font-size:10px;color:#3b4d61}
 .seller-listing-row small{font-size:9px;color:#8794a3;text-transform:capitalize}
+
+
+.comment-panel{margin-top:12px;padding:12px;background:#f8fafb;border:1px solid #edf1f4;border-radius:9px}
+.comment-list{display:grid;gap:9px;max-height:220px;overflow:auto}
+.comment-list>p{font-size:9px;color:#9aa4af}
+.comment-row{border-bottom:1px solid #e9eef1;padding-bottom:8px}
+.comment-row strong{font-size:9px;color:#526277}
+.comment-row p{font-size:10px;color:#647389;line-height:1.5;margin:4px 0 0;white-space:pre-wrap}
+.comment-panel form{display:flex;gap:7px;margin-top:10px}
+.comment-panel input{flex:1;min-width:0;border:1px solid #e1e8ed;border-radius:7px;padding:9px;font:inherit;font-size:10px}
+.comment-panel form button{border:1px solid #dce8e4;border-radius:7px;padding:8px 10px;background:#fff;color:#34796e;font-size:9px;font-weight:800}
+.comment-panel form button:disabled{opacity:.45}
+@media(max-width:760px){.comment-panel form{flex-wrap:wrap}.comment-panel input{flex-basis:100%}}
