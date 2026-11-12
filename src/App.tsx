@@ -4,7 +4,7 @@ import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'admin';
-type Post = { id: string; author: string; text: string; likes: number; liked: boolean; comments: number; time: string };
+type Post = { id: string; authorId: string; author: string; text: string; likes: number; liked: boolean; comments: number; time: string };
 type Comment = { id: string; body: string; author_name: string; created_at: string };
 type Pick = { id: number; home: string; away: string; market: string; selection: string };
 type Profile = { id: string; display_name: string; role: 'buyer' | 'seller' | 'admin'; account_status: string };
@@ -36,6 +36,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<string[]>([]);
   const [commentTarget, setCommentTarget] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentDraft, setCommentDraft] = useState('');
@@ -98,7 +99,7 @@ function App() {
     }
     if (active === 'community') {
       void apiRequest<{ items: Array<{ id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts')
-        .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))));
+        .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))));
     }
     if (active === 'sports') {
       void Promise.all([
@@ -149,6 +150,14 @@ function App() {
       setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at })));
       setNotice('Post imechapishwa kwenye jamii.');
     } catch (error) { setNotice((error as Error).message || 'Imeshindikana kuchapisha post.'); }
+  };
+
+  const toggleFollow = async (userId: string) => {
+    if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kufuatilia mwanachama.'); return; }
+    try {
+      const result = await apiRequest<{ followed: boolean }>('/api/v1/users/' + userId + '/follow', authUser, { method: 'PUT' });
+      setFollowingUsers((current) => result.followed ? [...current.filter((id) => id !== userId), userId] : current.filter((id) => id !== userId));
+    } catch (error) { setNotice((error as Error).message); }
   };
 
   const toggleLike = async (postId: string) => {
@@ -277,7 +286,7 @@ function App() {
     if (active === 'community') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">SOCIAL NETWORK</span><h2>Jamii ya Wazee</h2><p>Jadili michezo, shiriki uchambuzi na fuatilia wachambuzi.</p></div></div>
       <div className="community-layout"><div className="feed-column"><div className="composer"><div className="avatar">W</div><div className="composer-body"><textarea value={postText} onChange={(e) => setPostText(e.target.value)} placeholder="Una maoni gani kuhusu michezo ya leo?" /><div className="composer-footer"><span>Shiriki kwa heshima. Epuka madai ya ushindi wa uhakika.</span><button className="primary-button" onClick={publishPost} disabled={!postText.trim()}>Chapisha</button></div></div></div>
-      {posts.length === 0 ? <div className="empty-state"><div className="empty-illustration">◎</div><h3>Karibu kwenye jamii</h3><p>Bado hakuna post zilizochapishwa. Ingia ili uwe wa kwanza kushiriki.</p></div> : posts.map((post) => <article className="post-card" key={post.id}><div className="post-head"><div className="avatar">W</div><div><strong>{post.author}</strong><small>{post.time}</small></div><span className="post-menu">•••</span></div><p>{post.text}</p><div className="post-actions"><button onClick={() => void toggleLike(post.id)} className={post.liked ? 'liked' : ''}>♡ {post.likes} Likes</button><button onClick={() => void openComments(post.id)}>▢ {post.comments} Maoni</button><button onClick={() => setNotice('Kushare post kutawashwa kwenye toleo lijalo.')}>↗ Shiriki</button></div>{commentTarget === post.id && <div className="comment-panel"><div className="comment-list">{comments.length === 0 ? <p>Bado hakuna maoni.</p> : comments.map((comment) => <div className="comment-row" key={comment.id}><strong>{comment.author_name || 'Mwanachama'}</strong><p>{comment.body}</p></div>)}</div><form onSubmit={(event) => void submitComment(event)}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={2000} /><button type="submit" disabled={!commentDraft.trim()}>Tuma</button><button type="button" onClick={() => setCommentTarget(null)}>Funga</button></form></div>}</article>)}</div>
+      {posts.length === 0 ? <div className="empty-state"><div className="empty-illustration">◎</div><h3>Karibu kwenye jamii</h3><p>Bado hakuna post zilizochapishwa. Ingia ili uwe wa kwanza kushiriki.</p></div> : posts.map((post) => <article className="post-card" key={post.id}><div className="post-head"><div className="avatar">W</div><div><strong>{post.author}</strong><small>{post.time}</small></div>{authUser && post.authorId !== authUser.uid ? <button className="follow-button" onClick={() => void toggleFollow(post.authorId)}>{followingUsers.includes(post.authorId) ? 'Unafuatilia' : '+ Fuata'}</button> : <span className="post-menu">•••</span>}</div><p>{post.text}</p><div className="post-actions"><button onClick={() => void toggleLike(post.id)} className={post.liked ? 'liked' : ''}>♡ {post.likes} Likes</button><button onClick={() => void openComments(post.id)}>▢ {post.comments} Maoni</button><button onClick={() => setNotice('Kushare post kutawashwa kwenye toleo lijalo.')}>↗ Shiriki</button></div>{commentTarget === post.id && <div className="comment-panel"><div className="comment-list">{comments.length === 0 ? <p>Bado hakuna maoni.</p> : comments.map((comment) => <div className="comment-row" key={comment.id}><strong>{comment.author_name || 'Mwanachama'}</strong><p>{comment.body}</p></div>)}</div><form onSubmit={(event) => void submitComment(event)}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={2000} /><button type="submit" disabled={!commentDraft.trim()}>Tuma</button><button type="button" onClick={() => setCommentTarget(null)}>Funga</button></form></div>}</article>)}</div>
       <aside className="community-aside"><div className="aside-card"><span className="section-overline">KANUNI ZA JAMII</span><h3>Uwazi kwanza</h3><p>Hakuna tips za uhakika, matokeo ya kubuni au udanganyifu wa takwimu. Rekodi za tipster zitathibitishwa kwa matokeo halisi.</p></div><div className="aside-card"><span className="section-overline">JENGA WASIFU</span><h3>Fuata maendeleo yako</h3><p>Profiles, followers na leaderboard vitaunganishwa baada ya mfumo wa akaunti kuwekwa.</p></div></aside></div>
     </section>;
     if (active === 'sports') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SPORTS DATA</span><h2>Michezo na matokeo</h2><p>Ratiba na matokeo hutolewa kutoka D1 kwa chanzo na muda wa mwisho wa data.</p></div><span className="source-badge">{sportsProviders.some((provider) => provider.status === 'healthy') ? 'Provider healthy' : 'Provider haijawezeshwa'}</span></div><div className="sports-tabs"><button className="sports-tab active">Ratiba</button><button className="sports-tab">Live</button><button className="sports-tab">Matokeo</button><button className="sports-tab">Ligi</button></div>{sportsFixtures.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">◉</div><h3>Hakuna fixtures zilizothibitishwa bado</h3><p>API za kusoma ratiba na matokeo zipo tayari. Data itaonekana baada ya kuingiza fixtures kutoka provider aliyethibitishwa; hatutengenezi mechi au odds za kubuni.</p><button className="outline-button" onClick={() => go('builder')}>Fungua bet builder →</button></div> : <div className="fixture-list">{sportsFixtures.map((fixture) => <article className="fixture-card" key={fixture.id}><div className="fixture-meta"><strong>{fixture.competition}</strong><span>{new Date(fixture.kickoff_at).toLocaleString('sw-TZ',{dateStyle:'medium',timeStyle:'short'})}</span></div><div className="fixture-teams"><strong>{fixture.home_name}</strong><span>VS</span><strong>{fixture.away_name}</strong></div><div className="fixture-foot"><span>{fixture.status}</span><small>Chanzo: {fixture.provider_name} · Ilipokelewa: {new Date(fixture.fetched_at).toLocaleString('sw-TZ')}</small></div></article>)}</div>}</section>;
