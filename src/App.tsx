@@ -98,8 +98,8 @@ function App() {
         .catch(() => setNotice('Marketplace haipatikani kwa sasa.'));
     }
     if (active === 'community') {
-      void apiRequest<{ items: Array<{ id: string; author_id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts')
-        .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))));
+      void apiRequest<{ items: Array<{ id: string; author_id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string; is_following: number }> }>('/api/v1/community/posts', authUser)
+        .then((data) => { const items = data.items || []; setPosts(items.map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))); setFollowingUsers(items.filter((post) => post.is_following === 1).map((post) => post.author_id)); });
     }
     if (active === 'sports') {
       void Promise.all([
@@ -146,8 +146,8 @@ function App() {
     try {
       await apiRequest('/api/v1/community/posts', authUser, { method: 'POST', body: JSON.stringify({ body: postText.trim() }) });
       setPostText('');
-      const data = await apiRequest<{ items: Array<{ id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts');
-      setPosts((data.items || []).map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at })));
+      const data = await apiRequest<{ items: Array<{ id: string; author_id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string; is_following: number }> }>('/api/v1/community/posts');
+      const items = data.items || []; setPosts(items.map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))); setFollowingUsers(items.filter((post) => post.is_following === 1).map((post) => post.author_id));
       setNotice('Post imechapishwa kwenye jamii.');
     } catch (error) { setNotice((error as Error).message || 'Imeshindikana kuchapisha post.'); }
   };
