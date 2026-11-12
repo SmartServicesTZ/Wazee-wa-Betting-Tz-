@@ -8,7 +8,7 @@ type Post = { id: string; author: string; text: string; likes: number; liked: bo
 type Comment = { id: string; body: string; author_name: string; created_at: string };
 type Pick = { id: number; home: string; away: string; market: string; selection: string };
 type Profile = { id: string; display_name: string; role: 'buyer' | 'seller' | 'admin'; account_status: string };
-type Listing = { id: string; title: string; description: string; sport: string; price_tzs: number; seller_name: string };
+type Listing = { id: string; title: string; description_preview: string; sport: string; price_tzs: number; seller_name: string };
 type SellerApplication = { id: string; legal_name: string; phone: string; reason: string; status: string; created_at: string; display_name: string };
 type SellerListing = { id: string; title: string; description: string; sport: string; price_tzs: number; status: string; result_status: string; created_at: string; seller_name?: string };
 
@@ -195,7 +195,7 @@ function App() {
     if (active === 'marketplace') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">BUYER MARKETPLACE</span><h2>Soko la mikeka</h2><p>Gundua wachambuzi na mikeka iliyochapishwa na wauzaji walioidhinishwa.</p></div><button className="primary-button" onClick={() => go('seller')}>＋ Omba kuwa seller</button></div>
       <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><input className="search-input" placeholder="Tafuta tipster au mkeka..." /></div>
-      {listings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>Marketplace inasubiri wauzaji wa kwanza</h3><p>Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{listings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name}</small></div></article>)}</div>}
+      {listings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>Marketplace inasubiri wauzaji wa kwanza</h3><p>Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{listings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name}</small></div></article>)}</div>}
     </section>;
     if (active === 'community') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">SOCIAL NETWORK</span><h2>Jamii ya Wazee</h2><p>Jadili michezo, shiriki uchambuzi na fuatilia wachambuzi.</p></div></div>
