@@ -380,3 +380,21 @@ body { background:var(--wz-bg); color:var(--wz-ink); }
  .ticket-pick-row strong { font-size:10px; }
  .official-banner { padding:11px; }
 }
+
+/* Social controls for the three illustrative feed tickets */
+.ticket-leg-count{font-size:9px;color:#718096;font-weight:700}
+.demo-social-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding-top:10px;margin-top:8px;border-top:1px solid #edf1f6}
+.social-action{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:9px 5px;border:0;border-radius:8px;background:#f4f7fb;color:#52647a;font-size:10px;font-weight:750;cursor:pointer}
+.social-action>span{font-size:14px;color:#1769e8}
+.social-action small{font-size:9px;color:#8290a1}
+.social-action.is-liked{background:#eaf3ff;color:#1769e8}
+.social-action.is-liked>span{color:#1769e8}
+.demo-comment-box{margin-top:9px;padding:10px;border:1px solid #e2eaf3;border-radius:10px;background:#f8fafc}
+.demo-comment-box form{display:flex;gap:7px;margin-top:8px}
+.demo-comment-box input{width:100%;min-width:0;padding:9px 10px;border:1px solid #dce5ef;border-radius:8px;background:#fff;font-size:10px}
+.demo-comment-box form button{padding:8px 12px;border:0;border-radius:8px;background:#1769e8;color:#fff;font-size:10px;font-weight:800}
+.demo-comment-box form button:disabled{opacity:.45}
+.demo-comment-box>small{display:block;margin-top:7px;color:#8492a4;font-size:8px;line-height:1.4}
+.demo-comment-item{margin:5px 0;padding:7px 8px;border-radius:7px;background:#fff;color:#536277;font-size:10px}
+.demo-comment-item strong{color:#1b2a40}
+@media(max-width:900px),(hover:none) and (pointer:coarse){.demo-social-actions{gap:4px}.social-action{font-size:9px;padding:9px 2px}.demo-comment-box{padding:9px}}
