@@ -18,7 +18,7 @@ async function check(name, url) {
     if (!html.includes('<div id="root"></div>') || !html.includes("Wazee wa Betting TZ")) {
       throw new Error("Website response is missing the React app shell or title.");
     }
-    const scriptPath = html.match(/<script[^>]+src="([^"]+\\.js)"/)?.[1];
+    const scriptPath = html.match(/<script[^>]+src="([^"]+\.js)"/)?.[1];
     if (!scriptPath) throw new Error("Production JavaScript bundle was not found in the HTML.");
     const bundleResponse = await fetch(new URL(scriptPath, url), { signal: AbortSignal.timeout(15000) });
     if (!bundleResponse.ok) throw new Error("Production JavaScript bundle returned HTTP " + bundleResponse.status);
