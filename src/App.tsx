@@ -35,16 +35,9 @@ const categories = ['Zote', 'Mpira wa miguu', 'Basketball', 'Tennis', 'Mikeka ya
 
 type DemoTicket = { id: number; title: string; category: string; posted: string; selections: string[]; sampleOdds: string; };
 const demoTickets: DemoTicket[] = [
- { id: 1, title: 'Mkeka wa mfano #01', category: 'Mpira wa miguu', posted: 'Dakika 8 zilizopita', selections: ['Arsenal kushinda', 'Real Madrid zaidi ya magoli 1.5', 'Inter Milan kupata goli'], sampleOdds: '3.40' },
- { id: 2, title: 'Mkeka wa mfano #02', category: 'Mpira wa miguu', posted: 'Dakika 24 zilizopita', selections: ['Barcelona kushinda au sare', 'Bayern Munich zaidi ya magoli 1.5'], sampleOdds: '2.15' },
- { id: 3, title: 'Mkeka wa mfano #03', category: 'Mpira wa miguu', posted: 'Saa 1 lililopita', selections: ['Liverpool kupata goli', 'PSG zaidi ya kona 3.5', 'Juventus under 4.5'], sampleOdds: '3.05' },
- { id: 4, title: 'Mkeka wa mfano #04', category: 'Mpira wa miguu', posted: 'Saa 2 yaliyopita', selections: ['Manchester City kushinda', 'AC Milan kupata goli'], sampleOdds: '2.60' },
- { id: 5, title: 'Mkeka wa mfano #05', category: 'Mpira wa miguu', posted: 'Saa 3 yaliyopita', selections: ['Chelsea over 1.5 magoli', 'Atletico Madrid double chance'], sampleOdds: '2.75' },
- { id: 6, title: 'Mkeka wa mfano #06', category: 'Mpira wa miguu', posted: 'Saa 4 yaliyopita', selections: ['Dortmund kupata goli', 'Napoli over 1.5 magoli', 'Ajax double chance'], sampleOdds: '3.80' },
- { id: 7, title: 'Mkeka wa mfano #07', category: 'Mpira wa miguu', posted: 'Saa 5 yaliyopita', selections: ['Tottenham over 0.5 magoli', 'Roma under 4.5 magoli'], sampleOdds: '2.30' },
- { id: 8, title: 'Mkeka wa mfano #08', category: 'Mpira wa miguu', posted: 'Saa 6 yaliyopita', selections: ['Benfica kushinda au sare', 'Porto kupata goli'], sampleOdds: '2.45' },
- { id: 9, title: 'Mkeka wa mfano #09', category: 'Mpira wa miguu', posted: 'Saa 7 yaliyopita', selections: ['PSV kushinda', 'Sporting CP over 1.5 magoli', 'Lyon kupata goli'], sampleOdds: '4.10' },
- { id: 10, title: 'Mkeka wa mfano #10', category: 'Mpira wa miguu', posted: 'Saa 8 yaliyopita', selections: ['Fenerbahce double chance', 'Galatasaray over 0.5 magoli'], sampleOdds: '2.90' },
+ { id: 1, title: 'Mkeka wa mfano #01', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Arsenal kushinda', 'Real Madrid zaidi ya magoli 1.5', 'Inter Milan kupata goli'], sampleOdds: '3.40' },
+ { id: 2, title: 'Mkeka wa mfano #02', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Barcelona kushinda au sare', 'Bayern Munich zaidi ya magoli 1.5'], sampleOdds: '2.15' },
+ { id: 3, title: 'Mkeka wa mfano #03', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Liverpool kupata goli', 'PSG zaidi ya kona 3.5', 'Juventus under 4.5'], sampleOdds: '3.05' },
 ];
 
 function App() {
@@ -52,6 +45,10 @@ function App() {
   const [category, setCategory] = useState('Zote');
   const [marketSearch, setMarketSearch] = useState('');
   const [marketSort, setMarketSort] = useState('newest');
+  const [demoLiked, setDemoLiked] = useState<number[]>([]);
+  const [demoCommentOpen, setDemoCommentOpen] = useState<number | null>(null);
+  const [demoCommentDraft, setDemoCommentDraft] = useState('');
+  const [demoComments, setDemoComments] = useState<Record<number, string[]>>({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -224,6 +221,28 @@ function App() {
     } catch (error) { setNotice((error as Error).message); }
   };
 
+  const toggleDemoLike = (ticketId: number) => {
+    setDemoLiked((current) => current.includes(ticketId) ? current.filter((id) => id !== ticketId) : [...current, ticketId]);
+  };
+
+  const submitDemoComment = (ticketId: number) => {
+    if (!demoCommentDraft.trim()) return;
+    setDemoComments((current) => ({ ...current, [ticketId]: [...(current[ticketId] || []), demoCommentDraft.trim()] }));
+    setDemoCommentDraft('');
+    setNotice('Maoni ya mfano yameongezwa kwenye chapisho hili.');
+  };
+
+  const shareDemoTicket = async (ticket: DemoTicket) => {
+    const shareText = ticket.title + '\\n' + ticket.selections.map((selection, index) => (index + 1) + '. ' + selection).join('\\n') + '\\nOdds za mfano: ' + ticket.sampleOdds + '\\nMfano tu — si odds za live.';
+    try {
+      if (navigator.share) await navigator.share({ title: 'Wazee wa Betting TZ', text: shareText, url: window.location.href });
+      else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(shareText + '\\n' + window.location.href); setNotice('Kiungo na maelezo ya mkeka vimenakiliwa.'); }
+      else setNotice('Kifaa hiki hakiruhusu kushare moja kwa moja kwa sasa.');
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') setNotice('Imeshindikana kushare. Jaribu tena.');
+    }
+  };
+
   const toggleLike = async (postId: string) => {
     if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kuweka like.'); return; }
     try {
@@ -349,7 +368,7 @@ function App() {
         <button className="primary-button" onClick={() => go('builder')}>＋ Jenga mkeka</button>
       </div>
       <div className="official-banner"><span className="official-avatar">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>Akaunti rasmi ya jukwaa · Machapisho ya mfano hapa chini</small></div><span className="official-tag">RASMI</span></div>
-      <div className="demo-notice"><strong>TAARIFA:</strong> Mikeka 10 hapa ni mifano ya kuonyesha muundo wa machapisho. Si mechi za sasa, si odds za live, na haimaanishi ushindi umehakikishwa.</div>
+      <div className="demo-notice"><strong>TAARIFA:</strong> Mikeka 3 hapa ni mifano ya kuonyesha muundo wa machapisho. Si mechi za sasa, si odds za live, na haimaanishi ushindi umehakikishwa.</div>
       <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="market-search-controls"><input className="search-input" value={marketSearch} onChange={(event) => setMarketSearch(event.target.value)} placeholder="Tafuta mkeka..." /><select className="market-sort" value={marketSort} onChange={(event) => setMarketSort(event.target.value)}><option value="newest">Mpya kwanza</option><option value="price_low">Bei: ndogo kwanza</option><option value="price_high">Bei: kubwa kwanza</option></select></div></div>
       <div className="feed-section-label"><strong>Mikeka iliyopostiwa</strong><span>{demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).length + filteredListings.length} machapisho</span></div>
       <div className="listing-grid feed-listing-grid">
@@ -357,7 +376,17 @@ function App() {
           <div className="ticket-author-row"><span className="official-avatar small">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>{ticket.posted}</small></div><span className="demo-pill">DEMO</span></div>
           <div className="ticket-title-row"><h3>{ticket.title}</h3><span className="ticket-free">BURE</span></div>
           <div className="ticket-picks">{ticket.selections.map((selection, index) => <div className="ticket-pick-row" key={index}><span>{index + 1}</span><strong>{selection}</strong></div>)}</div>
-          <div className="ticket-card-footer"><span><small>ODDS ZA MFANO</small><strong>{ticket.sampleOdds}</strong></span><button onClick={() => setNotice('Huu ni mkeka wa mfano. Kununua na kufungua machapisho halisi kutapatikana baada ya marketplace kuunganishwa.')}>Angalia mkeka <span>→</span></button></div>
+          <div className="ticket-card-footer"><span><small>ODDS ZA MFANO</small><strong>{ticket.sampleOdds}</strong></span><span className="ticket-leg-count">{ticket.selections.length} chaguo</span></div>
+          <div className="demo-social-actions">
+            <button className={demoLiked.includes(ticket.id) ? 'social-action is-liked' : 'social-action'} onClick={() => toggleDemoLike(ticket.id)} aria-pressed={demoLiked.includes(ticket.id)}><span>♥</span> Like <small>{demoLiked.includes(ticket.id) ? '1' : '0'}</small></button>
+            <button className="social-action" onClick={() => { setDemoCommentOpen(demoCommentOpen === ticket.id ? null : ticket.id); setDemoCommentDraft(''); }}><span>▢</span> Maoni <small>{(demoComments[ticket.id] || []).length}</small></button>
+            <button className="social-action" onClick={() => void shareDemoTicket(ticket)}><span>↗</span> Shiriki</button>
+          </div>
+          {demoCommentOpen === ticket.id && <div className="demo-comment-box">
+            {(demoComments[ticket.id] || []).map((comment, index) => <p className="demo-comment-item" key={index}><strong>Mwanachama:</strong> {comment}</p>)}
+            <form onSubmit={(event) => { event.preventDefault(); submitDemoComment(ticket.id); }}><input value={demoCommentDraft} onChange={(event) => setDemoCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={300} /><button type="submit" disabled={!demoCommentDraft.trim()}>Tuma</button></form>
+            <small>Maoni haya ni ya majaribio na yanabaki kwenye kifaa hiki kwa muda wa ukurasa.</small>
+          </div>
         </article>)}
         {filteredListings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name} · {listing.selection_count || 0} selections</small></div></article>)}
       </div>
