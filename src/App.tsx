@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { User } from 'firebase/auth';
+import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'admin';
