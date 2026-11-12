@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
+import TicketPosterTools from './components/ticket-poster-tools';
+import { renderTicketPng, resolveFresh1X2Odds } from './lib/ticket-poster.js';
+import type { SportsOddsSnapshot, TicketPosterOdds } from './lib/ticket-poster.js';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'admin';
 type Post = { id: string; authorId: string; author: string; text: string; likes: number; liked: boolean; comments: number; time: string };
 type Comment = { id: string; body: string; author_name: string; created_at: string };
-type Pick = { id: number; home: string; away: string; market: string; selection: string };
+type Pick = { id: number; home: string; away: string; market: string; selection: string; competition?: string; kickoffAt?: string; providerName?: string; odds?: TicketPosterOdds };
 type Profile = { id: string; display_name: string; role: 'buyer' | 'seller' | 'admin'; account_status: string };
 type Listing = { id: string; title: string; description_preview: string; sport: string; price_tzs: number; seller_name: string; selection_count: number; created_at: string };
 type SellerApplication = { id: string; legal_name: string; phone: string; reason: string; status: string; created_at: string; display_name: string };
@@ -19,8 +22,25 @@ type WalletLedgerEntry = { id: string; entry_type: string; amount_tzs: number; r
 type ListingSelection = { home_name: string; away_name: string; market: string; selection: string };
 type SellerListing = { id: string; title: string; description: string; sport: string; price_tzs: number; status: string; result_status: string; created_at: string; seller_name?: string; selection_count?: number; selections?: ListingSelection[] };
 type SportsFixture = { id: string; external_id: string; competition: string; home_name: string; away_name: string; kickoff_at: string; status: string; source_updated_at: string | null; fetched_at: string; provider_name: string; provider_status: string };
+type PosterSelection = { homeTeam: string; awayTeam: string; market: string; prediction: string; competition?: string; kickoffAt?: string; odds?: TicketPosterOdds };
 type SportsProvider = { id: string; provider_key: string; display_name: string; status: string; last_success_at: string | null; last_error_at: string | null };
 type SportsResult = { fixture_id: string; competition: string; home_name: string; away_name: string; kickoff_at: string; home_score: number | null; away_score: number | null; result_status: string; fetched_at: string; provider_name: string };
+
+const formatKickoffForPoster = (value?: string) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('sw-TZ', { timeZone: 'Africa/Dar_es_Salaam', dateStyle: 'medium', timeStyle: 'short' });
+};
+
+const toPosterSelections = (items: Pick[]): PosterSelection[] => items.map((pick) => ({
+  homeTeam: pick.home,
+  awayTeam: pick.away,
+  market: pick.market,
+  prediction: pick.selection,
+  competition: pick.competition,
+  kickoffAt: formatKickoffForPoster(pick.kickoffAt),
+  odds: pick.odds,
+}));
 
 const navItems: { id: Section; label: string; icon: string }[] = [
   { id: 'marketplace', label: 'Uwanja wa mikeka', icon: '▤' },
@@ -78,6 +98,9 @@ function App() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentDraft, setCommentDraft] = useState('');
   const [picks, setPicks] = useState<Pick[]>([]);
+  const [sampleMode, setSampleMode] = useState(false);
+  const [selectedFixture, setSelectedFixture] = useState<SportsFixture | null>(null);
+  const [fixtureOdds, setFixtureOdds] = useState<SportsOddsSnapshot[]>([]);
   const [fixtureHome, setFixtureHome] = useState('');
   const [fixtureAway, setFixtureAway] = useState('');
   const [fixtureMarket, setFixtureMarket] = useState('1X2');
@@ -187,13 +210,42 @@ function App() {
   }, [active, authUser, profile?.role]);
 
   const go = (section: Section) => { setActive(section); setMobileMenuOpen(false); setNotice(''); };
+  const openFixtureInBuilder = async (fixture: SportsFixture) => {
+    setSelectedFixture(fixture); setFixtureOdds([]); setFixtureHome(fixture.home_name); setFixtureAway(fixture.away_name); setFixtureMarket('1X2'); setFixtureSelection(''); setSampleMode(false);
+    go('builder');
+    try {
+      const data = await apiRequest<{ items: SportsOddsSnapshot[] }>(`/api/v1/sports/odds?fixture_id=${encodeURIComponent(fixture.id)}`);
+      setFixtureOdds(data.items || []);
+      if (!data.items?.length) setNotice('Mechi imechaguliwa kutoka provider; odds hazijapatikana, hivyo poster itaonyesha wazi kuwa hazipo.');
+    } catch {
+      setNotice('Mechi imechaguliwa kutoka provider lakini odds hazijapatikana. Hakuna odds zitakazobuniwa.');
+    }
+  };
+  const loadSampleTicket = () => {
+    const sample: Pick[] = Array.from({ length: 3 }, (_, index) => ({
+      id: Date.now() + index,
+      home: `SAMPLE HOME CLUB ${String(index + 1).padStart(2, '0')}`,
+      away: `SAMPLE AWAY CLUB ${String(index + 1).padStart(2, '0')}`,
+      market: '1X2 · TEST',
+      selection: '1 · SAMPLE HOME WIN',
+      competition: `SAMPLE LEAGUE ${String(index + 1).padStart(2, '0')}`,
+      kickoffAt: `${String(17 + index).padStart(2, '0')}:30 · TEST TIME`,
+      providerName: 'SYNTHETIC TEST DATA',
+      odds: { home: 1.45, draw: 3.2, away: 5.4, selected: 1.45, source: 'SYNTHETIC TEST ONLY' },
+    }));
+    setPicks(sample); setSampleMode(true); setSelectedFixture(null); setFixtureOdds([]); setFixtureHome(''); setFixtureAway(''); setFixtureSelection('');
+    setNotice('Mkeka wa mfano umewekwa kwa ajili ya kujaribu muonekano tu. Timu, ligi, muda na odds si data halisi; hakuna AI wala bet iliyowekwa.');
+  };
   const addPick = () => {
     if (!fixtureHome.trim() || !fixtureAway.trim() || !fixtureSelection.trim()) {
       setNotice('Jaza timu zote mbili na chaguo lako kabla ya kuongeza.');
       return;
     }
-    setPicks((current) => [...current, { id: Date.now(), home: fixtureHome.trim(), away: fixtureAway.trim(), market: fixtureMarket, selection: fixtureSelection.trim() }]);
-    setFixtureHome(''); setFixtureAway(''); setFixtureSelection('');
+    const activeFixture = selectedFixture && selectedFixture.home_name === fixtureHome.trim() && selectedFixture.away_name === fixtureAway.trim() ? selectedFixture : null;
+    const odds = activeFixture && fixtureMarket === '1X2' ? resolveFresh1X2Odds(fixtureOdds, activeFixture, fixtureSelection) ?? undefined : undefined;
+    const newPick: Pick = { id: Date.now(), home: fixtureHome.trim(), away: fixtureAway.trim(), market: fixtureMarket, selection: fixtureSelection.trim(), competition: activeFixture?.competition, kickoffAt: activeFixture?.kickoff_at, providerName: activeFixture?.provider_name, odds };
+    setPicks((current) => sampleMode ? [newPick] : [...current, newPick]);
+    setSampleMode(false); setSelectedFixture(null); setFixtureOdds([]); setFixtureHome(''); setFixtureAway(''); setFixtureSelection('');
     setNotice('Chaguo limeongezwa kwenye mkeka wako wa maandalizi.');
   };
   const publishPost = async () => {
@@ -248,119 +300,37 @@ function App() {
   };
 
   const exportDemoTicket = async (ticket: DemoTicket, shouldShare = false) => {
-    const loadLogo = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
-      if (!src) { resolve(null); return; }
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      image.onload = () => resolve(image);
-      image.onerror = () => resolve(null);
-      image.src = src;
-    });
-    const width = 1200;
-    const rowHeight = 126;
-    const height = 330 + ticket.selections.length * rowHeight + 260;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Kifaa hakiwezi kutengeneza PNG.');
-    const background = context.createLinearGradient(0, 0, width, height);
-    background.addColorStop(0, '#071b31');
-    background.addColorStop(0.55, '#103c58');
-    background.addColorStop(1, '#0c765f');
-    context.fillStyle = background;
-    context.fillRect(0, 0, width, height);
-    context.fillStyle = '#ffffff12';
-    context.beginPath();
-    context.arc(width - 40, 90, 220, 0, Math.PI * 2);
-    context.stroke();
-    context.fillStyle = '#ffffff';
-    context.font = '800 42px Arial';
-    context.fillText('WAZEE WA BETTING TZ', 62, 80);
-    context.fillStyle = '#9ee4c6';
-    context.font = '800 22px Arial';
-    context.fillText('UWANJA WA MIKeka  ·  TICKET PREVIEW', 64, 120);
-    context.fillStyle = '#f5c36d';
-    context.font = '900 17px Arial';
-    context.fillText('DEMO — SI ODDS ZA LIVE', 64, 165);
-    context.fillStyle = '#ffffff18';
-    context.fillRect(60, 196, width - 120, 1);
-    context.fillStyle = '#ffffff';
-    context.font = '800 30px Arial';
-    context.fillText(ticket.title.toUpperCase(), 64, 245);
-    context.fillStyle = '#c7d9e3';
-    context.font = '18px Arial';
-    context.fillText('Kickoff: haijaunganishwa  ·  Ligi: data ya mfano  ·  Status: PENDING', 64, 278);
-    const logos = await Promise.all(ticket.selections.map((selection) => loadLogo(getDemoTeam(selection).logo)));
-    ticket.selections.forEach((selection, index) => {
-      const y = 310 + index * rowHeight;
-      const team = getDemoTeam(selection);
-      context.fillStyle = '#ffffff14';
-      context.beginPath();
-      context.roundRect(56, y, width - 112, 100, 16);
-      context.fill();
-      context.fillStyle = '#87bfff';
-      context.font = '900 20px Arial';
-      context.fillText(String(index + 1).padStart(2, '0'), 79, y + 39);
-      context.fillStyle = '#ffffff';
-      context.beginPath();
-      context.arc(154, y + 50, 30, 0, Math.PI * 2);
-      context.fill();
-      if (logos[index]) context.drawImage(logos[index] as HTMLImageElement, 130, y + 26, 48, 48);
-      else {
-        context.fillStyle = '#1c6f67';
-        context.font = '900 24px Arial';
-        context.fillText('⚽', 136, y + 59);
-      }
-      context.fillStyle = '#f7fbff';
-      context.font = '800 24px Arial';
-      context.fillText(team.name, 215, y + 40);
-      context.fillStyle = '#b7cfdb';
-      context.font = '18px Arial';
-      context.fillText(selection.slice(team.name === 'Timu' ? 0 : team.name.length).trim() || selection, 215, y + 71);
-      context.fillStyle = '#9ee4c6';
-      context.font = '900 26px Arial';
-      context.textAlign = 'right';
-      context.fillText('—', width - 88, y + 55);
-      context.textAlign = 'left';
-    });
-    const summaryY = 330 + ticket.selections.length * rowHeight;
-    context.fillStyle = '#f7fbff';
-    context.beginPath();
-    context.roundRect(56, summaryY, width - 112, 150, 16);
-    context.fill();
-    context.fillStyle = '#6a7b8d';
-    context.font = '800 18px Arial';
-    context.fillText('TOTAL ODDS · DEMO', 86, summaryY + 45);
-    context.fillStyle = '#0e6b61';
-    context.font = '900 52px Arial';
-    context.fillText(ticket.sampleOdds, 86, summaryY + 105);
-    context.fillStyle = '#526478';
-    context.font = '800 20px Arial';
-    context.textAlign = 'right';
-    context.fillText(`${ticket.selections.length} MECHI`, width - 86, summaryY + 62);
-    context.fillText('HAKUNA BET ILIYOWEKWA', width - 86, summaryY + 100);
-    context.textAlign = 'left';
-    context.fillStyle = '#d7f4e5';
-    context.font = '800 18px Arial';
-    context.fillText('Cheza kwa uwajibikaji · Taarifa hii ni DEMO ya muundo', 64, height - 42);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('PNG haikutengenezwa.')), 'image/png'));
-    const file = new File([blob], `wazee-wa-betting-tz-demo-${ticket.id}.png`, { type: 'image/png' });
+    const demoPoster = {
+      title: ticket.title,
+      sourceLabel: 'DEMO PREVIEW',
+      accessLabel: 'TEST ONLY',
+      dateLabel: 'SAMPLE DATE · NOT A REAL FIXTURE LIST',
+      statusLabel: 'SAMPLE DATA · ODDS HAZIJATHIBITISHWA · HAKUNA AI',
+      testOnly: true,
+      selections: ticket.selections.map((selection, index) => ({
+        homeTeam: `SAMPLE · ${getDemoTeam(selection).name}`,
+        awayTeam: `SAMPLE OPPONENT ${String(index + 1).padStart(2, '0')}`,
+        market: 'SAMPLE PICK',
+        prediction: selection,
+        competition: 'LIGI HAIPATIKANI · TEST ONLY',
+        kickoffAt: 'MUDA HAUPATIKANI · TEST ONLY',
+      })),
+    };
     try {
+      const result = await renderTicketPng(demoPoster);
+      const file = new File([result.blob], `TEST-ONLY-wazee-ticket-${ticket.id}.png`, { type: 'image/png' });
       if (shouldShare && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: 'Wazee wa Betting TZ · DEMO', files: [file] });
-        setNotice('PNG ya mkeka imeshirikishwa.');
+        await navigator.share({ title: 'Wazee wa Betting TZ · TEST ONLY', text: 'Picha hii ni mfano wa muundo tu; si mechi au odds halisi.', files: [file] });
+        setNotice('PNG ya mfano imeshirikishwa. Ni TEST ONLY, si mkeka halisi.');
       } else {
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(result.blob);
         const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = file.name;
-        anchor.click();
-        URL.revokeObjectURL(url);
-        setNotice(shouldShare ? 'Kifaa hiki hakiruhusu share ya file; PNG imepakuliwa.' : 'PNG ya mkeka imepakuliwa.');
+        anchor.href = url; anchor.download = file.name; anchor.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+        setNotice(shouldShare ? 'Kifaa hiki hakiruhusu file share; PNG ya TEST ONLY imepakuliwa.' : 'PNG ya TEST ONLY imepakuliwa; si tip au odds halisi.');
       }
     } catch (error) {
-      if ((error as Error).name !== 'AbortError') setNotice('Imeshindikana kushare. Jaribu tena.');
+      if ((error as Error).name !== 'AbortError') setNotice((error as Error).message || 'Imeshindikana kutengeneza PNG ya mfano.');
     }
   };
 
@@ -427,34 +397,6 @@ function App() {
       const data = await apiRequest<{ items: SellerListing[] }>('/api/v1/seller/listings/me', authUser);
       setSellerListings(data.items || []); setNotice('Listing imetumwa kwa Admin kwa ukaguzi kabla ya kuchapishwa.');
     } catch (error) { setNotice((error as Error).message); }
-  };
-
-  const downloadTicket = async () => {
-    if (!picks.length) return;
-    const xmlEntities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' };
-    const escapeXml = (value: string) => value.replace(/[&<>\"']/g, (character) => xmlEntities[character] || character);
-    const width = 1000;
-    const rowHeight = 86;
-    const height = 260 + picks.length * rowHeight;
-    const rows = picks.map((pick, index) => `<g transform="translate(48 ${190 + index * rowHeight})"><rect width="904" height="68" rx="13" fill="#f5f8f8"/><circle cx="34" cy="34" r="19" fill="#dcece7"/><text x="34" y="40" text-anchor="middle" font-size="16" font-weight="700" fill="#28766d">${index + 1}</text><text x="72" y="29" font-size="21" font-weight="700" fill="#26394e">${escapeXml(pick.home)} vs ${escapeXml(pick.away)}</text><text x="72" y="52" font-size="14" fill="#77879a">${escapeXml(pick.market)} · ${escapeXml(pick.selection)}</text></g>`).join('');
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#ffffff"/><rect width="100%" height="142" fill="#17344e"/><text x="48" y="54" font-size="19" font-weight="800" letter-spacing="3" fill="#a9d9ca">WAZEE WA BETTING TZ</text><text x="48" y="100" font-size="32" font-weight="800" fill="#ffffff">Mkeka wa maandalizi</text><text x="48" y="125" font-size="14" fill="#d3e2e5">${picks.length} selections · ${new Date().toLocaleString('sw-TZ')}</text>${rows}<text x="48" y="${height - 45}" font-size="15" font-weight="700" fill="#a65d3b">PREVIEW TU · Odds hazijathibitishwa · Hakuna bet iliyowekwa</text><text x="48" y="${height - 20}" font-size="12" fill="#91a0ad">Tumia taarifa kutoka vyanzo vinavyoaminika na cheza kwa uwajibikaji.</text></svg>`;
-    const svgUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-      const context = canvas.getContext('2d');
-      if (!context) { URL.revokeObjectURL(svgUrl); setNotice('Imeshindikana kutengeneza picha kwenye kifaa hiki.'); return; }
-      context.drawImage(image, 0, 0);
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(svgUrl);
-        if (!blob) { setNotice('Imeshindikana ku-export picha.'); return; }
-        const pngUrl = URL.createObjectURL(blob); const anchor = document.createElement('a');
-        anchor.href = pngUrl; anchor.download = 'wazee-wa-betting-tz-mkeka-preview.png'; anchor.click();
-        URL.revokeObjectURL(pngUrl); setNotice('Picha ya mkeka imeandaliwa. Hii ni preview, si tiketi ya bet.');
-      }, 'image/png');
-    };
-    image.onerror = () => { URL.revokeObjectURL(svgUrl); setNotice('Imeshindikana kutengeneza picha.'); };
-    image.src = svgUrl;
   };
 
   const setUserAccountStatus = async (id: string, status: 'active' | 'suspended') => {
@@ -531,9 +473,9 @@ function App() {
       {posts.length === 0 ? <div className="empty-state"><div className="empty-illustration">◎</div><h3>Karibu kwenye jamii</h3><p>Bado hakuna post zilizochapishwa. Ingia ili uwe wa kwanza kushiriki.</p></div> : posts.map((post) => <article className="post-card" key={post.id}><div className="post-head"><div className="avatar">W</div><div><button className="profile-name-button" onClick={() => void openMemberProfile(post.authorId)}>{post.author}</button><small>{post.time}</small></div>{authUser && post.authorId !== authUser.uid ? <button className="follow-button" onClick={() => void toggleFollow(post.authorId)}>{followingUsers.includes(post.authorId) ? 'Unafuatilia' : '+ Fuata'}</button> : <span className="post-menu">•••</span>}</div><p>{post.text}</p><div className="post-actions"><button onClick={() => void toggleLike(post.id)} className={post.liked ? 'liked' : ''}>♡ {post.likes} Likes</button><button onClick={() => void openComments(post.id)}>▢ {post.comments} Maoni</button><button onClick={() => setNotice('Kushare post kutawashwa kwenye toleo lijalo.')}>↗ Shiriki</button></div>{commentTarget === post.id && <div className="comment-panel"><div className="comment-list">{comments.length === 0 ? <p>Bado hakuna maoni.</p> : comments.map((comment) => <div className="comment-row" key={comment.id}><strong>{comment.author_name || 'Mwanachama'}</strong><p>{comment.body}</p></div>)}</div><form onSubmit={(event) => void submitComment(event)}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={2000} /><button type="submit" disabled={!commentDraft.trim()}>Tuma</button><button type="button" onClick={() => setCommentTarget(null)}>Funga</button></form></div>}</article>)}</div>
       <aside className="community-aside"><div className="aside-card"><span className="section-overline">KANUNI ZA JAMII</span><h3>Uwazi kwanza</h3><p>Hakuna tips za uhakika, matokeo ya kubuni au udanganyifu wa takwimu. Rekodi za tipster zitathibitishwa kwa matokeo halisi.</p></div><div className="aside-card"><span className="section-overline">JENGA WASIFU</span><h3>Fuata maendeleo yako</h3><p>Fuata wanachama moja kwa moja kutoka kwenye post zao. Wasifu na leaderboard vitafuata.</p></div></aside></div>
     </section>;
-    if (active === 'sports') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SPORTS DATA</span><h2>Michezo na matokeo</h2><p>Ratiba na matokeo hutolewa kutoka D1 kwa chanzo na muda wa mwisho wa data.</p></div><span className="source-badge">{sportsProviders.some((provider) => provider.status === 'healthy') ? 'Provider healthy' : 'Provider haijawezeshwa'}</span></div><div className="sports-tabs"><button className={sportsTab === 'fixtures' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('fixtures')}>Ratiba</button><button className={sportsTab === 'live' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('live')}>Live</button><button className={sportsTab === 'results' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('results')}>Matokeo</button><button className={sportsTab === 'leagues' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('leagues')}>Ligi</button></div>{sportsTab === 'results' ? sportsResults.length === 0 ? <div className="empty-state large-empty"><h3>Hakuna matokeo yaliyothibitishwa</h3><p>Matokeo yataonekana baada ya kupokelewa kutoka provider.</p></div> : <div className="fixture-list">{sportsResults.map((result) => <article className="fixture-card" key={result.fixture_id}><div className="fixture-meta"><strong>{result.competition}</strong><span>{result.result_status}</span></div><div className="result-teams"><strong>{result.home_name}</strong><b>{result.home_score ?? '—'} : {result.away_score ?? '—'}</b><strong>{result.away_name}</strong></div><div className="fixture-foot"><span>Chanzo: {result.provider_name}</span><small>Ilipokelewa: {new Date(result.fetched_at).toLocaleString('sw-TZ')}</small></div></article>)}</div> : sportsTab === 'leagues' ? leagueNames.length === 0 ? <div className="empty-state large-empty"><h3>Hakuna ligi zenye data bado</h3><p>Ligi zitaonekana baada ya fixtures halisi kuingizwa.</p></div> : <div className="league-grid">{leagueNames.map((league) => <div className="league-card" key={league}><span>◉</span><strong>{league}</strong><small>{sportsFixtures.filter((fixture) => fixture.competition === league).length} fixtures</small></div>)}</div> : (sportsTab === 'live' ? liveFixtures : upcomingFixtures).length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">◉</div><h3>{sportsTab === 'live' ? 'Hakuna mechi live zilizothibitishwa' : 'Hakuna fixtures zilizothibitishwa bado'}</h3><p>Data itaonekana baada ya kuingizwa kutoka provider aliyethibitishwa. Hatutengenezi mechi au odds za kubuni.</p><button className="outline-button" onClick={() => go('builder')}>Fungua bet builder →</button></div> : <div className="fixture-list">{(sportsTab === 'live' ? liveFixtures : upcomingFixtures).map((fixture) => <article className="fixture-card" key={fixture.id}><div className="fixture-meta"><strong>{fixture.competition}</strong><span>{new Date(fixture.kickoff_at).toLocaleString('sw-TZ',{dateStyle:'medium',timeStyle:'short'})}</span></div><div className="fixture-teams"><strong>{fixture.home_name}</strong><span>VS</span><strong>{fixture.away_name}</strong></div><div className="fixture-foot"><span>{fixture.status}</span><small>Chanzo: {fixture.provider_name} · Ilipokelewa: {new Date(fixture.fetched_at).toLocaleString('sw-TZ')}</small><button className="fixture-add-button" onClick={() => { setFixtureHome(fixture.home_name); setFixtureAway(fixture.away_name); setFixtureMarket('1X2'); setFixtureSelection(''); go('builder'); }}>Jenga mkeka</button></div></article>)}</div>}</section>;
-    if (active === 'builder') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">TICKET BUILDER</span><h2>Jenga mkeka wako</h2><p>Andaa chaguo zako. Odds hazijazalishwa; zitaongezwa tu kutoka chanzo kilichothibitishwa.</p></div><span className="count-pill">{totalSelections} selections</span></div><div className="builder-layout"><div className="builder-form"><h3>Ongeza mechi / chaguo</h3><label>Timu ya nyumbani<input value={fixtureHome} onChange={(e) => setFixtureHome(e.target.value)} placeholder="Mfano: Timu A" /></label><label>Timu ya ugenini<input value={fixtureAway} onChange={(e) => setFixtureAway(e.target.value)} placeholder="Mfano: Timu B" /></label><label>Soko<select value={fixtureMarket} onChange={(e) => setFixtureMarket(e.target.value)}><option>1X2</option><option>Over / Under</option><option>Both Teams To Score</option><option>Double Chance</option><option>Other</option></select></label><label>Chaguo lako<input value={fixtureSelection} onChange={(e) => setFixtureSelection(e.target.value)} placeholder="Andika selection" /></label><button className="primary-button" onClick={addPick}>＋ Ongeza selection</button></div><div className="builder-slip"><div className="slip-head"><div><span className="section-overline">BET SLIP PREVIEW</span><h3>Mkeka wako</h3></div><button className="clear-button" onClick={() => setPicks([])} disabled={!picks.length}>Futa yote</button></div>{picks.length === 0 ? <div className="slip-empty">Chaguo zako zitaonekana hapa. Anza kwa kujaza fomu.</div> : picks.map((pick, index) => <div className="selection-row" key={pick.id}><span className="selection-number">{index + 1}</span><div><strong>{pick.home} vs {pick.away}</strong><small>{pick.market} · {pick.selection}</small></div><button aria-label="Ondoa selection" onClick={() => setPicks((current) => current.filter((p) => p.id !== pick.id))}>×</button></div>)}<div className="slip-note">Huu ni muundo wa kuandaa na kushare chaguo. Hakuna odds, stake, malipo au uwekaji bet unaofanyika hapa.</div><button className="outline-button full-button" onClick={() => void downloadTicket()} disabled={!picks.length}>Pakua picha ya mkeka (PNG)</button></div></div></section>;
-    if (active === 'seller') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SELLER CENTER</span><h2>Uza mikeka yako</h2><p>Admin lazima aidhinishe akaunti na kukagua kila listing kabla ya kuchapishwa sokoni.</p></div><span className="approval-badge">{profile?.role === 'seller' ? 'Seller ameidhinishwa' : 'Approval inahitajika'}</span></div><div className="seller-layout"><div className="seller-benefits"><div className="seller-symbol">✦</div><h3>Jenga biashara yako ya tips</h3><ul><li>Wasifu wa tipster na rekodi zinazoonekana</li><li>Listings zenye bei na maelezo wazi</li><li>Ripoti za mauzo na earnings</li><li>Platform commission inayopendekezwa: 10%</li></ul><p className="muted-note">Malipo, wallet na withdrawals bado vimezimwa hadi provider na compliance vikaguliwe.</p></div>{profile?.role === 'seller' ? <div className="seller-form"><h3>Chapisha listing mpya</h3><form onSubmit={(event) => void createListing(event)}><label>Kichwa cha mkeka / uchambuzi<input required maxLength={140} value={listingTitle} onChange={(e) => setListingTitle(e.target.value)} placeholder="Mfano: Uchambuzi wa mechi za leo" /></label><label>Maelezo<textarea value={listingDescription} onChange={(e) => setListingDescription(e.target.value)} maxLength={3000} placeholder="Eleza uchambuzi wako kwa uwazi..." /></label><label>Mchezo<select value={listingSport} onChange={(e) => setListingSport(e.target.value)}><option value="football">Mpira wa miguu</option><option value="basketball">Basketball</option><option value="tennis">Tennis</option><option value="other">Mengineyo</option></select></label><div className="seller-picks"><h4>Selections za mkeka (hadi 30)</h4><div className="seller-pick-fields"><input value={sellerHome} onChange={(e) => setSellerHome(e.target.value)} placeholder="Timu ya nyumbani" /><input value={sellerAway} onChange={(e) => setSellerAway(e.target.value)} placeholder="Timu ya ugenini" /><select value={sellerMarket} onChange={(e) => setSellerMarket(e.target.value)}><option>1X2</option><option>Over / Under</option><option>Both Teams To Score</option><option>Double Chance</option><option>Other</option></select><input value={sellerSelection} onChange={(e) => setSellerSelection(e.target.value)} placeholder="Chaguo lako" /><button type="button" className="outline-button" onClick={addSellerSelection}>＋ Ongeza chaguo</button></div>{sellerSelections.map((item, index) => <div className="seller-pick-row" key={item.id}><span>{index + 1}. {item.home} vs {item.away}</span><small>{item.market} · {item.selection}</small><button type="button" onClick={() => setSellerSelections((current) => current.filter((pick) => pick.id !== item.id))}>×</button></div>)}</div><label>Bei (TSh)<input required type="number" min="0" step="1" value={listingPrice} onChange={(e) => setListingPrice(e.target.value)} placeholder="0 kwa bure" /></label><button className="primary-button" type="submit">Tuma listing kwa Admin</button></form><h3 className="admin-section-title">Listings zako</h3>{sellerListings.length === 0 ? <p className="muted-note">Bado hujatuma listing.</p> : sellerListings.map((listing) => <div className="seller-listing-row" key={listing.id}><strong>{listing.title}</strong><small>{listing.status} · {listing.selection_count || listing.selections?.length || 0} selections · {listing.price_tzs.toLocaleString('en-US')} TSh</small></div>)}</div> : !authUser ? <div className="seller-form"><h3>Ingia kuomba kuwa seller</h3><p>Ombi lako litaunganishwa na akaunti yako ili uweze kufuatilia maamuzi ya Admin.</p><button className="primary-button" onClick={() => setAuthMode('login')}>Ingia / Jisajili</button></div> : mySellerApplication ? <div className="seller-form"><h3>Hali ya ombi lako</h3><span className="approval-badge">{mySellerApplication.status === 'pending' ? 'Linasubiri ukaguzi' : mySellerApplication.status === 'approved' ? 'Umeidhinishwa' : 'Ombi limekataliwa'}</span><p>{mySellerApplication.legal_name} · {mySellerApplication.phone}</p><p className="muted-note">Uliomba: {new Date(mySellerApplication.created_at).toLocaleString('sw-TZ')}{mySellerApplication.reviewed_at ? ' · Limekaguliwa: ' + new Date(mySellerApplication.reviewed_at).toLocaleString('sw-TZ') : ''}</p>{mySellerApplication.status === 'approved' && <><p>Refresh akaunti yako ili kufungua sehemu ya kutengeneza listings.</p><button className="primary-button" onClick={() => { if (!authUser) return; void apiRequest<{ user: Profile }>('/api/v1/me', authUser).then((data) => { setProfile(data.user); setNotice('Akaunti imesasishwa.'); }).catch((error: Error) => setNotice(error.message)); }}>Sasisha akaunti</button></>}{mySellerApplication.status === 'rejected' && <button className="outline-button" onClick={() => setMySellerApplication(null)}>Tuma ombi jipya</button>}</div> : <form className="seller-form" onSubmit={(e) => { e.preventDefault(); if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kutuma ombi la seller.'); return; } void apiRequest('/api/v1/seller-applications', authUser, { method: 'POST', body: JSON.stringify({ legal_name: sellerName, phone: sellerPhone, reason: sellerReason }) }).then(() => { setSellerSent(true); void apiRequest<{ application: MySellerApplication | null }>('/api/v1/seller-applications/me', authUser).then((data) => setMySellerApplication(data.application)); setNotice('Ombi limetumwa. Status: PENDING.'); }).catch((error: Error) => setNotice(error.message)); }}><h3>Maombi ya seller</h3><label>Jina kamili<input required value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Jina lako" /></label><label>Namba ya simu<input required type="tel" value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)} placeholder="07XX XXX XXX" /></label><label>Kwa nini unataka kuwa seller?<textarea required value={sellerReason} onChange={(e) => setSellerReason(e.target.value)} placeholder="Eleza uzoefu wako na aina ya uchambuzi..." /></label><button className="primary-button" type="submit" disabled={!authReady}>Tuma maombi ya seller</button>{sellerSent && <p className="form-notice">Ombi lako limepokelewa na linasubiri ukaguzi wa Admin.</p>}</form>}</div></section>;
+    if (active === 'sports') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SPORTS DATA</span><h2>Michezo na matokeo</h2><p>Ratiba na matokeo hutolewa kutoka D1 kwa chanzo na muda wa mwisho wa data.</p></div><span className="source-badge">{sportsProviders.some((provider) => provider.status === 'healthy') ? 'Provider healthy' : 'Provider haijawezeshwa'}</span></div><div className="sports-tabs"><button className={sportsTab === 'fixtures' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('fixtures')}>Ratiba</button><button className={sportsTab === 'live' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('live')}>Live</button><button className={sportsTab === 'results' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('results')}>Matokeo</button><button className={sportsTab === 'leagues' ? 'sports-tab active' : 'sports-tab'} onClick={() => setSportsTab('leagues')}>Ligi</button></div>{sportsTab === 'results' ? sportsResults.length === 0 ? <div className="empty-state large-empty"><h3>Hakuna matokeo yaliyothibitishwa</h3><p>Matokeo yataonekana baada ya kupokelewa kutoka provider.</p></div> : <div className="fixture-list">{sportsResults.map((result) => <article className="fixture-card" key={result.fixture_id}><div className="fixture-meta"><strong>{result.competition}</strong><span>{result.result_status}</span></div><div className="result-teams"><strong>{result.home_name}</strong><b>{result.home_score ?? '—'} : {result.away_score ?? '—'}</b><strong>{result.away_name}</strong></div><div className="fixture-foot"><span>Chanzo: {result.provider_name}</span><small>Ilipokelewa: {new Date(result.fetched_at).toLocaleString('sw-TZ')}</small></div></article>)}</div> : sportsTab === 'leagues' ? leagueNames.length === 0 ? <div className="empty-state large-empty"><h3>Hakuna ligi zenye data bado</h3><p>Ligi zitaonekana baada ya fixtures halisi kuingizwa.</p></div> : <div className="league-grid">{leagueNames.map((league) => <div className="league-card" key={league}><span>◉</span><strong>{league}</strong><small>{sportsFixtures.filter((fixture) => fixture.competition === league).length} fixtures</small></div>)}</div> : (sportsTab === 'live' ? liveFixtures : upcomingFixtures).length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">◉</div><h3>{sportsTab === 'live' ? 'Hakuna mechi live zilizothibitishwa' : 'Hakuna fixtures zilizothibitishwa bado'}</h3><p>Data itaonekana baada ya kuingizwa kutoka provider aliyethibitishwa. Hatutengenezi mechi au odds za kubuni.</p><button className="outline-button" onClick={() => go('builder')}>Fungua bet builder →</button></div> : <div className="fixture-list">{(sportsTab === 'live' ? liveFixtures : upcomingFixtures).map((fixture) => <article className="fixture-card" key={fixture.id}><div className="fixture-meta"><strong>{fixture.competition}</strong><span>{new Date(fixture.kickoff_at).toLocaleString('sw-TZ',{dateStyle:'medium',timeStyle:'short'})}</span></div><div className="fixture-teams"><strong>{fixture.home_name}</strong><span>VS</span><strong>{fixture.away_name}</strong></div><div className="fixture-foot"><span>{fixture.status}</span><small>Chanzo: {fixture.provider_name} · Ilipokelewa: {new Date(fixture.fetched_at).toLocaleString('sw-TZ')}</small><button className="fixture-add-button" onClick={() => void openFixtureInBuilder(fixture)}>Jenga mkeka</button></div></article>)}</div>}</section>;
+    if (active === 'builder') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">TICKET BUILDER</span><h2>Jenga mkeka wako</h2><p>Andaa chaguo zako. Odds hazijazalishwa; zitaongezwa tu kutoka chanzo kilichothibitishwa.</p></div><span className="count-pill">{totalSelections} selections</span></div><div className="builder-layout"><div className="builder-form"><h3>Ongeza mechi / chaguo</h3><label>Timu ya nyumbani<input value={fixtureHome} onChange={(e) => setFixtureHome(e.target.value)} placeholder="Mfano: Timu A" /></label><label>Timu ya ugenini<input value={fixtureAway} onChange={(e) => setFixtureAway(e.target.value)} placeholder="Mfano: Timu B" /></label><label>Soko<select value={fixtureMarket} onChange={(e) => setFixtureMarket(e.target.value)}><option>1X2</option><option>Over / Under</option><option>Both Teams To Score</option><option>Double Chance</option><option>Other</option></select></label><label>Chaguo lako<input value={fixtureSelection} onChange={(e) => setFixtureSelection(e.target.value)} placeholder="Andika selection" /></label><button className="primary-button" onClick={addPick}>＋ Ongeza selection</button><button className="outline-button" type="button" onClick={loadSampleTicket}>Jaza mkeka wa mfano (TEST ONLY)</button><p className="muted-note">Mfano huu ni wa kujaribu poster tu; si AI, si mechi/odds halisi, na hauwezi kuwekwa kama bet.</p></div><div className="builder-slip"><div className="slip-head"><div><span className="section-overline">BET SLIP PREVIEW</span><h3>Mkeka wako</h3></div><button className="clear-button" onClick={() => { setPicks([]); setSampleMode(false); }} disabled={!picks.length}>Futa yote</button></div>{picks.length === 0 ? <div className="slip-empty">Chaguo zako zitaonekana hapa. Anza kwa kujaza fomu.</div> : picks.map((pick, index) => <div className="selection-row" key={pick.id}><span className="selection-number">{index + 1}</span><div><strong>{pick.home} vs {pick.away}</strong><small>{pick.market} · {pick.selection}</small></div><button aria-label="Ondoa selection" onClick={() => setPicks((current) => current.filter((p) => p.id !== pick.id))}>×</button></div>)}<div className="slip-note">Huu ni muundo wa kuandaa na kushare chaguo. Hakuna stake, malipo au uwekaji bet unaofanyika hapa.</div></div></div>{picks.length > 0 && <TicketPosterTools ticket={{ title: sampleMode ? 'Mkeka wa mfano · TEST ONLY' : 'Mkeka wa maandalizi', sourceLabel: sampleMode ? 'SAMPLE TICKET' : (picks.some((item) => item.providerName) ? 'SPORTS PROVIDER' : 'BET BUILDER'), accessLabel: sampleMode ? 'TEST ONLY' : 'DRAFT', dateLabel: new Date().toLocaleString('sw-TZ'), statusLabel: sampleMode ? 'SAMPLE DATA · SI MECHI/ODDS HALISI · HAKUNA AI' : 'DRAFT PREVIEW · HAKUNA BET ILIYOWEKWA', testOnly: sampleMode, selections: toPosterSelections(picks) }} onNotice={setNotice} />}</section>;
+    if (active === 'seller') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SELLER CENTER</span><h2>Uza mikeka yako</h2><p>Admin lazima aidhinishe akaunti na kukagua kila listing kabla ya kuchapishwa sokoni.</p></div><span className="approval-badge">{profile?.role === 'seller' ? 'Seller ameidhinishwa' : 'Approval inahitajika'}</span></div><div className="seller-layout"><div className="seller-benefits"><div className="seller-symbol">✦</div><h3>Jenga biashara yako ya tips</h3><ul><li>Wasifu wa tipster na rekodi zinazoonekana</li><li>Listings zenye bei na maelezo wazi</li><li>Ripoti za mauzo na earnings</li><li>Platform commission inayopendekezwa: 10%</li></ul><p className="muted-note">Malipo, wallet na withdrawals bado vimezimwa hadi provider na compliance vikaguliwe.</p></div>{profile?.role === 'seller' ? <div className="seller-form"><h3>Chapisha listing mpya</h3><form onSubmit={(event) => void createListing(event)}><label>Kichwa cha mkeka / uchambuzi<input required maxLength={140} value={listingTitle} onChange={(e) => setListingTitle(e.target.value)} placeholder="Mfano: Uchambuzi wa mechi za leo" /></label><label>Maelezo<textarea value={listingDescription} onChange={(e) => setListingDescription(e.target.value)} maxLength={3000} placeholder="Eleza uchambuzi wako kwa uwazi..." /></label><label>Mchezo<select value={listingSport} onChange={(e) => setListingSport(e.target.value)}><option value="football">Mpira wa miguu</option><option value="basketball">Basketball</option><option value="tennis">Tennis</option><option value="other">Mengineyo</option></select></label><div className="seller-picks"><h4>Selections za mkeka (hadi 30)</h4><div className="seller-pick-fields"><input value={sellerHome} onChange={(e) => setSellerHome(e.target.value)} placeholder="Timu ya nyumbani" /><input value={sellerAway} onChange={(e) => setSellerAway(e.target.value)} placeholder="Timu ya ugenini" /><select value={sellerMarket} onChange={(e) => setSellerMarket(e.target.value)}><option>1X2</option><option>Over / Under</option><option>Both Teams To Score</option><option>Double Chance</option><option>Other</option></select><input value={sellerSelection} onChange={(e) => setSellerSelection(e.target.value)} placeholder="Chaguo lako" /><button type="button" className="outline-button" onClick={addSellerSelection}>＋ Ongeza chaguo</button></div>{sellerSelections.map((item, index) => <div className="seller-pick-row" key={item.id}><span>{index + 1}. {item.home} vs {item.away}</span><small>{item.market} · {item.selection}</small><button type="button" onClick={() => setSellerSelections((current) => current.filter((pick) => pick.id !== item.id))}>×</button></div>)}</div><label>Bei (TSh)<input required type="number" min="0" step="1" value={listingPrice} onChange={(e) => setListingPrice(e.target.value)} placeholder="0 kwa bure" /></label><button className="primary-button" type="submit">Tuma listing kwa Admin</button></form>{sellerSelections.length > 0 && <TicketPosterTools ticket={{ title: listingTitle || 'Seller tips draft', sourceLabel: 'SELLER TIPS', accessLabel: listingPrice.trim() === '' ? 'DRAFT' : Number(listingPrice) === 0 ? 'FREE' : 'PREMIUM', dateLabel: new Date().toLocaleString('sw-TZ'), statusLabel: 'DRAFT PREVIEW · HAKUNA BET ILIYOWEKWA', selections: toPosterSelections(sellerSelections) }} onNotice={setNotice} />}<h3 className="admin-section-title">Listings zako</h3>{sellerListings.length === 0 ? <p className="muted-note">Bado hujatuma listing.</p> : sellerListings.map((listing) => <div className="seller-listing-row" key={listing.id}><strong>{listing.title}</strong><small>{listing.status} · {listing.selection_count || listing.selections?.length || 0} selections · {listing.price_tzs.toLocaleString('en-US')} TSh</small></div>)}</div> : !authUser ? <div className="seller-form"><h3>Ingia kuomba kuwa seller</h3><p>Ombi lako litaunganishwa na akaunti yako ili uweze kufuatilia maamuzi ya Admin.</p><button className="primary-button" onClick={() => setAuthMode('login')}>Ingia / Jisajili</button></div> : mySellerApplication ? <div className="seller-form"><h3>Hali ya ombi lako</h3><span className="approval-badge">{mySellerApplication.status === 'pending' ? 'Linasubiri ukaguzi' : mySellerApplication.status === 'approved' ? 'Umeidhinishwa' : 'Ombi limekataliwa'}</span><p>{mySellerApplication.legal_name} · {mySellerApplication.phone}</p><p className="muted-note">Uliomba: {new Date(mySellerApplication.created_at).toLocaleString('sw-TZ')}{mySellerApplication.reviewed_at ? ' · Limekaguliwa: ' + new Date(mySellerApplication.reviewed_at).toLocaleString('sw-TZ') : ''}</p>{mySellerApplication.status === 'approved' && <><p>Refresh akaunti yako ili kufungua sehemu ya kutengeneza listings.</p><button className="primary-button" onClick={() => { if (!authUser) return; void apiRequest<{ user: Profile }>('/api/v1/me', authUser).then((data) => { setProfile(data.user); setNotice('Akaunti imesasishwa.'); }).catch((error: Error) => setNotice(error.message)); }}>Sasisha akaunti</button></>}{mySellerApplication.status === 'rejected' && <button className="outline-button" onClick={() => setMySellerApplication(null)}>Tuma ombi jipya</button>}</div> : <form className="seller-form" onSubmit={(e) => { e.preventDefault(); if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kutuma ombi la seller.'); return; } void apiRequest('/api/v1/seller-applications', authUser, { method: 'POST', body: JSON.stringify({ legal_name: sellerName, phone: sellerPhone, reason: sellerReason }) }).then(() => { setSellerSent(true); void apiRequest<{ application: MySellerApplication | null }>('/api/v1/seller-applications/me', authUser).then((data) => setMySellerApplication(data.application)); setNotice('Ombi limetumwa. Status: PENDING.'); }).catch((error: Error) => setNotice(error.message)); }}><h3>Maombi ya seller</h3><label>Jina kamili<input required value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Jina lako" /></label><label>Namba ya simu<input required type="tel" value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)} placeholder="07XX XXX XXX" /></label><label>Kwa nini unataka kuwa seller?<textarea required value={sellerReason} onChange={(e) => setSellerReason(e.target.value)} placeholder="Eleza uzoefu wako na aina ya uchambuzi..." /></label><button className="primary-button" type="submit" disabled={!authReady}>Tuma maombi ya seller</button>{sellerSent && <p className="form-notice">Ombi lako limepokelewa na linasubiri ukaguzi wa Admin.</p>}</form>}</div></section>;
     if (active === 'admin') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">CONTROL PANEL</span><h2>Admin dashboard</h2><p>Usimamizi wa seller applications na marketplace kwa ruhusa za server.</p></div><span className="approval-badge">{profile?.role === 'admin' ? 'Admin amethibitishwa' : 'Admin access'}</span></div>{!authUser ? <div className="admin-warning">Ingia kwenye akaunti ya Admin ili kufungua control panel.</div> : profile?.role !== 'admin' ? <div className="admin-warning">Akaunti hii haina ruhusa ya Admin. Role inathibitishwa na backend; mmiliki wa mfumo anahitaji kukamilisha bootstrap ya Admin wa kwanza.</div> : <><div className="admin-stats-grid">{[['Watumiaji',adminSummary?.users],['Seller hai',adminSummary?.active_sellers],['Maombi ya seller',adminSummary?.pending_seller_applications],['Listings pending',adminSummary?.pending_listings],['Listings live',adminSummary?.published_listings],['Community posts',adminSummary?.community_posts],['Fixtures',adminSummary?.sports_fixtures],['Ledger entries',adminSummary?.wallet_ledger_entries]].map(([label,value]) => <div className="admin-stat" key={String(label)}><small>{label}</small><strong>{value ?? '—'}</strong></div>)}</div><h3 className="admin-section-title">Maombi ya seller</h3>{sellerApplications.length === 0 ? <div className="empty-state">Hakuna maombi ya seller yanayosubiri.</div> : <div className="admin-applications">{sellerApplications.map((application) => <article className="application-card" key={application.id}><div><strong>{application.legal_name}</strong><small>{application.phone} · {application.status}</small><p>{application.reason}</p></div>{application.status === 'pending' && <div className="application-actions"><button onClick={() => void reviewSeller(application.id, 'approved')}>Idhinisha</button><button onClick={() => void reviewSeller(application.id, 'rejected')}>Kataa</button></div>}</article>)}</div>}<h3 className="admin-section-title">Listings zinazosubiri ukaguzi</h3>{adminListings.length === 0 ? <div className="empty-state">Hakuna listing inayosubiri ukaguzi.</div> : <div className="admin-applications">{adminListings.map((listing) => <article className="application-card" key={listing.id}><div><strong>{listing.title}</strong><small>{listing.seller_name} · {listing.price_tzs.toLocaleString('en-US')} TSh</small><p>{listing.description}</p>{listing.selections && listing.selections.length > 0 && <ul className="admin-selection-list">{listing.selections.map((selection, index) => <li key={index}>{selection.home_name} vs {selection.away_name} — {selection.market}: <strong>{selection.selection}</strong></li>)}</ul>}</div><div className="application-actions"><button onClick={() => void reviewListing(listing.id, 'published')}>Chapisha</button><button onClick={() => void reviewListing(listing.id, 'rejected')}>Kataa</button></div></article>)}</div>}<h3 className="admin-section-title">Usimamizi wa watumiaji</h3>{adminUsers.length === 0 ? <div className="empty-state">Hakuna watumiaji bado.</div> : <div className="admin-applications">{adminUsers.map((account) => <article className="application-card" key={account.id}><div><strong>{account.display_name || 'Mtumiaji'}</strong><small>{account.phone || 'Namba haijaunganishwa'} · {account.role} · {account.account_status}</small><p>Alijiunga: {new Date(account.created_at).toLocaleString('sw-TZ')}</p></div>{account.role !== 'admin' && <div className="application-actions">{account.account_status === 'active' ? <button onClick={() => void setUserAccountStatus(account.id, 'suspended')}>Simamisha</button> : <button onClick={() => void setUserAccountStatus(account.id, 'active')}>Wezesha</button>}</div>}</article>)}</div>}<h3 className="admin-section-title">Audit log</h3>{adminAudit.length === 0 ? <div className="empty-state">Hakuna matukio yaliyorekodiwa bado.</div> : <div className="admin-applications">{adminAudit.slice(0,20).map((event) => <article className="application-card" key={event.id}><div><strong>{event.action}</strong><small>{event.actor_name || 'System'} · {event.target_type} · {event.target_id}</small></div><small>{new Date(event.created_at).toLocaleString('sw-TZ')}</small></article>)}</div>}<h3 className="admin-section-title">Wallet ledger (read-only)</h3><p className="muted-note">Hii ni audit view tu. Deposits, purchases, commissions na withdrawals hazijawezeshwa.</p>{walletLedger.length === 0 ? <div className="empty-state">Hakuna ledger entries. Hakuna fedha zinazohamishwa kwenye mfumo.</div> : <div className="admin-applications">{walletLedger.map((entry) => <article className="application-card" key={entry.id}><div><strong>{entry.user_name || entry.phone || 'Mtumiaji'} · {entry.entry_type}</strong><small>{entry.reference_type} · {entry.reference_id} · {entry.status}</small></div><div><strong>{entry.amount_tzs.toLocaleString('en-US')} TSh</strong><small>{new Date(entry.created_at).toLocaleString('sw-TZ')}</small></div></article>)}</div>}</>}</section>;
 
     return <><section className="hero-panel"><div className="hero-copy"><span className="hero-kicker">ZAIDI YA MIKeka. NI JAMII.</span><h2>Maarifa ya michezo.<br /><em>Thamani ya pamoja.</em></h2><p>Sehemu moja ya kupata tips, kujifunza kutoka kwa wengine na kushiriki uchambuzi wako.</p><div className="hero-actions"><button className="hero-primary" onClick={() => go('marketplace')}>Gundua marketplace <span>→</span></button><button className="hero-secondary" onClick={() => go('community')}>Tembelea jamii</button></div></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="ball">⚽</div><div className="floating-card card-top"><span>✦</span><div><b>Tips zenye chanzo</b><small>Uwazi kwanza</small></div></div><div className="floating-card card-bottom"><span>◎</span><div><b>Jenga jamii</b><small>Shiriki uchambuzi</small></div></div></div><div className="hero-index">01 <span>/</span> 04</div></section>
