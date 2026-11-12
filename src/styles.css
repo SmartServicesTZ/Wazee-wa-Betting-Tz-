@@ -99,3 +99,10 @@
 .admin-selection-list{padding-left:18px;margin:8px 0;color:#728094;font-size:9px;line-height:1.8}
 .admin-selection-list strong{color:#3d6f67}
 @media(max-width:760px){.seller-pick-fields{grid-template-columns:1fr}.seller-pick-row{grid-template-columns:1fr 20px}.seller-pick-row small{grid-column:1}.seller-pick-row button{grid-column:2;grid-row:1}}
+
+
+.admin-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:5px 0 22px}
+.admin-stat{background:#fff;border:1px solid #e7edf1;border-radius:10px;padding:13px}
+.admin-stat small{display:block;color:#8996a4;font-size:9px;font-weight:700}
+.admin-stat strong{display:block;color:#2f7b70;font-family:Manrope,sans-serif;font-size:22px;margin-top:6px}
+@media(max-width:760px){.admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
