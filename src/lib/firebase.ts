@@ -35,6 +35,7 @@ export async function registerWithPhone(phone: string, password: string, firstNa
   const email = phoneToEmail(phone);
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(credential.user, { displayName: firstName.trim() + " " + lastName.trim() });
+  await credential.user.getIdToken(true);
   return credential.user;
 }
 
