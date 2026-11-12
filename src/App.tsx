@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { User } from 'firebase/auth';
+import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'admin';
-type Post = { id: string; author: string; text: string; likes: number; comments: number; time: string };
+type Post = { id: string; author: string; text: string; likes: number; liked: boolean; comments: number; time: string };
+type Comment = { id: string; body: string; author_name: string; created_at: string };
 type Pick = { id: number; home: string; away: string; market: string; selection: string };
 type Profile = { id: string; display_name: string; role: 'buyer' | 'seller' | 'admin'; account_status: string };
-type Listing = { id: string; title: string; description: string; sport: string; price_tzs: number; seller_name: string };
+type Listing = { id: string; title: string; description_preview: string; sport: string; price_tzs: number; seller_name: string };
 type SellerApplication = { id: string; legal_name: string; phone: string; reason: string; status: string; created_at: string; display_name: string };
+type SellerListing = { id: string; title: string; description: string; sport: string; price_tzs: number; status: string; result_status: string; created_at: string; seller_name?: string };
 
 const navItems: { id: Section; label: string; icon: string }[] = [
   { id: 'overview', label: 'Muhtasari', icon: '⌂' },
@@ -27,6 +29,9 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [commentTarget, setCommentTarget] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentDraft, setCommentDraft] = useState('');
   const [picks, setPicks] = useState<Pick[]>([]);
   const [fixtureHome, setFixtureHome] = useState('');
   const [fixtureAway, setFixtureAway] = useState('');
@@ -49,6 +54,12 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [listings, setListings] = useState<Listing[]>([]);
   const [sellerApplications, setSellerApplications] = useState<SellerApplication[]>([]);
+  const [sellerListings, setSellerListings] = useState<SellerListing[]>([]);
+  const [adminListings, setAdminListings] = useState<SellerListing[]>([]);
+  const [listingTitle, setListingTitle] = useState('');
+  const [listingDescription, setListingDescription] = useState('');
+  const [listingSport, setListingSport] = useState('football');
+  const [listingPrice, setListingPrice] = useState('');
   const activeLabel = navItems.find((item) => item.id === active)?.label ?? 'Muhtasari';
   const totalSelections = useMemo(() => picks.length, [picks]);
 
@@ -69,11 +80,18 @@ function App() {
     }
     if (active === 'community') {
       void apiRequest<{ items: Array<{ id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts')
-        .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, comments: post.comments_count || 0, time: post.created_at }))));
+        .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))));
+    }
+    if (active === 'seller' && authUser && profile?.role === 'seller') {
+      void apiRequest<{ items: SellerListing[] }>('/api/v1/seller/listings/me', authUser)
+        .then((data) => setSellerListings(data.items || []))
+        .catch((error: Error) => setNotice(error.message));
     }
     if (active === 'admin' && authUser && profile?.role === 'admin') {
-      void apiRequest<{ items: SellerApplication[] }>('/api/v1/admin/seller-applications', authUser)
-        .then((data) => setSellerApplications(data.items || []))
+      void Promise.all([
+        apiRequest<{ items: SellerApplication[] }>('/api/v1/admin/seller-applications', authUser),
+        apiRequest<{ items: SellerListing[] }>('/api/v1/admin/listings', authUser),
+      ]).then(([applications, pendingListings]) => { setSellerApplications(applications.items || []); setAdminListings(pendingListings.items || []); })
         .catch((error: Error) => setNotice(error.message));
     }
   }, [active, authUser, profile?.role]);
@@ -95,9 +113,37 @@ function App() {
       await apiRequest('/api/v1/community/posts', authUser, { method: 'POST', body: JSON.stringify({ body: postText.trim() }) });
       setPostText('');
       const data = await apiRequest<{ items: Array<{ id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts');
-      setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, comments: post.comments_count || 0, time: post.created_at })));
+      setPosts((data.items || []).map((post) => ({ id: post.id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at })));
       setNotice('Post imechapishwa kwenye jamii.');
     } catch (error) { setNotice((error as Error).message || 'Imeshindikana kuchapisha post.'); }
+  };
+
+  const toggleLike = async (postId: string) => {
+    if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kuweka like.'); return; }
+    try {
+      const result = await apiRequest<{ liked: boolean }>('/api/v1/community/posts/' + postId + '/like', authUser, { method: 'PUT' });
+      setPosts((current) => current.map((post) => post.id === postId ? { ...post, liked: result.liked, likes: post.likes + (result.liked ? 1 : -1) } : post));
+    } catch (error) { setNotice((error as Error).message); }
+  };
+
+  const openComments = async (postId: string) => {
+    if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kuona na kuandika maoni.'); return; }
+    setCommentTarget(postId); setCommentDraft('');
+    try {
+      const data = await apiRequest<{ items: Comment[] }>('/api/v1/community/posts/' + postId + '/comments', authUser);
+      setComments(data.items || []);
+    } catch (error) { setNotice((error as Error).message); }
+  };
+
+  const submitComment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!authUser || !commentTarget || !commentDraft.trim()) return;
+    try {
+      await apiRequest('/api/v1/community/posts/' + commentTarget + '/comments', authUser, { method: 'POST', body: JSON.stringify({ body: commentDraft.trim() }) });
+      const data = await apiRequest<{ items: Comment[] }>('/api/v1/community/posts/' + commentTarget + '/comments', authUser);
+      setComments(data.items || []); setCommentDraft('');
+      setPosts((current) => current.map((post) => post.id === commentTarget ? { ...post, comments: post.comments + 1 } : post));
+    } catch (error) { setNotice((error as Error).message); }
   };
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
@@ -116,6 +162,26 @@ function App() {
     finally { setAuthBusy(false); }
   };
 
+  const createListing = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!authUser) return;
+    try {
+      await apiRequest('/api/v1/seller/listings', authUser, { method: 'POST', body: JSON.stringify({ title: listingTitle, description: listingDescription, sport: listingSport, price_tzs: Number(listingPrice) }) });
+      setListingTitle(''); setListingDescription(''); setListingPrice('');
+      const data = await apiRequest<{ items: SellerListing[] }>('/api/v1/seller/listings/me', authUser);
+      setSellerListings(data.items || []); setNotice('Listing imetumwa kwa Admin kwa ukaguzi kabla ya kuchapishwa.');
+    } catch (error) { setNotice((error as Error).message); }
+  };
+
+  const reviewListing = async (id: string, decision: 'published' | 'rejected') => {
+    if (!authUser) return;
+    try {
+      await apiRequest('/api/v1/admin/listings/' + id + '/decision', authUser, { method: 'POST', body: JSON.stringify({ decision }) });
+      setAdminListings((current) => current.filter((listing) => listing.id !== id));
+      setNotice(decision === 'published' ? 'Listing imechapishwa sokoni.' : 'Listing imekataliwa.');
+    } catch (error) { setNotice((error as Error).message); }
+  };
+
   const reviewSeller = async (id: string, decision: 'approved' | 'rejected') => {
     if (!authUser) return;
     try {
@@ -129,18 +195,18 @@ function App() {
     if (active === 'marketplace') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">BUYER MARKETPLACE</span><h2>Soko la mikeka</h2><p>Gundua wachambuzi na mikeka iliyochapishwa na wauzaji walioidhinishwa.</p></div><button className="primary-button" onClick={() => go('seller')}>＋ Omba kuwa seller</button></div>
       <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><input className="search-input" placeholder="Tafuta tipster au mkeka..." /></div>
-      {listings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>Marketplace inasubiri wauzaji wa kwanza</h3><p>Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{listings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name}</small></div></article>)}</div>}
+      {listings.length === 0 ? <div className="empty-state large-empty"><div className="empty-illustration">▤</div><h3>Marketplace inasubiri wauzaji wa kwanza</h3><p>Hakuna listing iliyochapishwa. Bidhaa, bei na rekodi za ushindi zitaonekana baada ya seller kuidhinishwa na kuweka listing halisi.</p><button className="outline-button" onClick={() => go('seller')}>Anza maombi ya seller →</button></div> : <div className="listing-grid">{listings.map((listing) => <article className="listing-card" key={listing.id}><span className="section-overline">{listing.sport}</span><h3>{listing.title}</h3><p>{listing.description_preview}</p><div><strong>{listing.price_tzs.toLocaleString('en-US')} TSh</strong><small>Seller: {listing.seller_name}</small></div></article>)}</div>}
     </section>;
     if (active === 'community') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">SOCIAL NETWORK</span><h2>Jamii ya Wazee</h2><p>Jadili michezo, shiriki uchambuzi na fuatilia wachambuzi.</p></div></div>
       <div className="community-layout"><div className="feed-column"><div className="composer"><div className="avatar">W</div><div className="composer-body"><textarea value={postText} onChange={(e) => setPostText(e.target.value)} placeholder="Una maoni gani kuhusu michezo ya leo?" /><div className="composer-footer"><span>Shiriki kwa heshima. Epuka madai ya ushindi wa uhakika.</span><button className="primary-button" onClick={publishPost} disabled={!postText.trim()}>Chapisha</button></div></div></div>
-      {posts.length === 0 ? <div className="empty-state"><div className="empty-illustration">◎</div><h3>Karibu kwenye jamii</h3><p>Bado hakuna post zilizochapishwa. Ingia ili uwe wa kwanza kushiriki.</p></div> : posts.map((post) => <article className="post-card" key={post.id}><div className="post-head"><div className="avatar">W</div><div><strong>{post.author}</strong><small>{post.time}</small></div><span className="post-menu">•••</span></div><p>{post.text}</p><div className="post-actions"><span>♡ {post.likes} Likes</span><span>▢ {post.comments} Maoni</span><button onClick={() => setNotice('Kushare post kutawashwa kwenye toleo lijalo.')}>↗ Shiriki</button></div></article>)}</div>
+      {posts.length === 0 ? <div className="empty-state"><div className="empty-illustration">◎</div><h3>Karibu kwenye jamii</h3><p>Bado hakuna post zilizochapishwa. Ingia ili uwe wa kwanza kushiriki.</p></div> : posts.map((post) => <article className="post-card" key={post.id}><div className="post-head"><div className="avatar">W</div><div><strong>{post.author}</strong><small>{post.time}</small></div><span className="post-menu">•••</span></div><p>{post.text}</p><div className="post-actions"><button onClick={() => void toggleLike(post.id)} className={post.liked ? 'liked' : ''}>♡ {post.likes} Likes</button><button onClick={() => void openComments(post.id)}>▢ {post.comments} Maoni</button><button onClick={() => setNotice('Kushare post kutawashwa kwenye toleo lijalo.')}>↗ Shiriki</button></div>{commentTarget === post.id && <div className="comment-panel"><div className="comment-list">{comments.length === 0 ? <p>Bado hakuna maoni.</p> : comments.map((comment) => <div className="comment-row" key={comment.id}><strong>{comment.author_name || 'Mwanachama'}</strong><p>{comment.body}</p></div>)}</div><form onSubmit={(event) => void submitComment(event)}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={2000} /><button type="submit" disabled={!commentDraft.trim()}>Tuma</button><button type="button" onClick={() => setCommentTarget(null)}>Funga</button></form></div>}</article>)}</div>
       <aside className="community-aside"><div className="aside-card"><span className="section-overline">KANUNI ZA JAMII</span><h3>Uwazi kwanza</h3><p>Hakuna tips za uhakika, matokeo ya kubuni au udanganyifu wa takwimu. Rekodi za tipster zitathibitishwa kwa matokeo halisi.</p></div><div className="aside-card"><span className="section-overline">JENGA WASIFU</span><h3>Fuata maendeleo yako</h3><p>Profiles, followers na leaderboard vitaunganishwa baada ya mfumo wa akaunti kuwekwa.</p></div></aside></div>
     </section>;
     if (active === 'sports') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SPORTS DATA</span><h2>Michezo na matokeo</h2><p>Ratiba, ligi, odds na matokeo kutoka kwa data providers wenye chanzo kinachotambulika.</p></div><span className="source-badge">Chanzo cha data: hakijaunganishwa</span></div><div className="sports-tabs"><button className="sports-tab active">Ratiba</button><button className="sports-tab">Live</button><button className="sports-tab">Matokeo</button><button className="sports-tab">Ligi</button></div><div className="empty-state large-empty"><div className="empty-illustration">◉</div><h3>Sports data provider bado hajaunganishwa</h3><p>Hatuonyeshi fixtures, live scores au odds za kubuni. Sehemu hii itaanza kuonyesha data baada ya API provider, key na masharti yake kuthibitishwa.</p><button className="outline-button" onClick={() => go('builder')}>Fungua bet builder →</button></div></section>;
     if (active === 'builder') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">TICKET BUILDER</span><h2>Jenga mkeka wako</h2><p>Andaa chaguo zako. Odds hazijazalishwa; zitaongezwa tu kutoka chanzo kilichothibitishwa.</p></div><span className="count-pill">{totalSelections} selections</span></div><div className="builder-layout"><div className="builder-form"><h3>Ongeza mechi / chaguo</h3><label>Timu ya nyumbani<input value={fixtureHome} onChange={(e) => setFixtureHome(e.target.value)} placeholder="Mfano: Timu A" /></label><label>Timu ya ugenini<input value={fixtureAway} onChange={(e) => setFixtureAway(e.target.value)} placeholder="Mfano: Timu B" /></label><label>Soko<select value={fixtureMarket} onChange={(e) => setFixtureMarket(e.target.value)}><option>1X2</option><option>Over / Under</option><option>Both Teams To Score</option><option>Double Chance</option><option>Other</option></select></label><label>Chaguo lako<input value={fixtureSelection} onChange={(e) => setFixtureSelection(e.target.value)} placeholder="Andika selection" /></label><button className="primary-button" onClick={addPick}>＋ Ongeza selection</button></div><div className="builder-slip"><div className="slip-head"><div><span className="section-overline">BET SLIP PREVIEW</span><h3>Mkeka wako</h3></div><button className="clear-button" onClick={() => setPicks([])} disabled={!picks.length}>Futa yote</button></div>{picks.length === 0 ? <div className="slip-empty">Chaguo zako zitaonekana hapa. Anza kwa kujaza fomu.</div> : picks.map((pick, index) => <div className="selection-row" key={pick.id}><span className="selection-number">{index + 1}</span><div><strong>{pick.home} vs {pick.away}</strong><small>{pick.market} · {pick.selection}</small></div><button aria-label="Ondoa selection" onClick={() => setPicks((current) => current.filter((p) => p.id !== pick.id))}>×</button></div>)}<div className="slip-note">Huu ni muundo wa kuandaa na kushare chaguo. Hakuna odds, stake, malipo au uwekaji bet unaofanyika hapa.</div><button className="outline-button full-button" onClick={() => setNotice('Export ya picha na kushare itawashwa baada ya ticket service kuunganishwa.')} disabled={!picks.length}>Tengeneza picha ya mkeka</button></div></div></section>;
-    if (active === 'seller') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SELLER CENTER</span><h2>Uza mikeka yako</h2><p>Omba kuwa seller. Admin lazima akague na kuidhinisha akaunti kabla ya listing yoyote kuonekana sokoni.</p></div><span className="approval-badge">Approval inahitajika</span></div><div className="seller-layout"><div className="seller-benefits"><div className="seller-symbol">✦</div><h3>Jenga biashara yako ya tips</h3><ul><li>Wasifu wa tipster na rekodi zinazoonekana</li><li>Listings zenye bei na maelezo wazi</li><li>Ripoti za mauzo na earnings</li><li>Platform commission inayopendekezwa: 10%</li></ul><p className="muted-note">Malipo, wallet na withdrawals bado vimezimwa hadi provider na compliance vikaguliwe.</p></div><form className="seller-form" onSubmit={(e) => { e.preventDefault(); if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kutuma ombi la seller.'); return; } void apiRequest('/api/v1/seller-applications', authUser, { method: 'POST', body: JSON.stringify({ legal_name: sellerName, phone: sellerPhone, reason: sellerReason }) }).then(() => { setSellerSent(true); setNotice('Ombi limetumwa. Status: PENDING.'); }).catch((error: Error) => setNotice(error.message)); }}><h3>Maombi ya seller</h3><label>Jina kamili<input required value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Jina lako" /></label><label>Namba ya simu<input required type="tel" value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)} placeholder="07XX XXX XXX" /></label><label>Kwa nini unataka kuwa seller?<textarea required value={sellerReason} onChange={(e) => setSellerReason(e.target.value)} placeholder="Eleza uzoefu wako na aina ya uchambuzi..." /></label><button className="primary-button" type="submit" disabled={!authReady}>Tuma maombi ya seller</button>{sellerSent && <p className="form-notice">Ombi lako limepokelewa na linasubiri ukaguzi wa Admin.</p>}</form></div></section>;
-    if (active === 'admin') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">CONTROL PANEL</span><h2>Admin dashboard</h2><p>Usimamizi wa seller applications na marketplace kwa ruhusa za server.</p></div><span className="approval-badge">{profile?.role === 'admin' ? 'Admin amethibitishwa' : 'Admin access'}</span></div>{!authUser ? <div className="admin-warning">Ingia kwenye akaunti ya Admin ili kufungua control panel.</div> : profile?.role !== 'admin' ? <div className="admin-warning">Akaunti hii haina ruhusa ya Admin. Role inathibitishwa na backend; mmiliki wa mfumo anahitaji kukamilisha bootstrap ya Admin wa kwanza.</div> : <><h3 className="admin-section-title">Maombi ya seller</h3>{sellerApplications.length === 0 ? <div className="empty-state">Hakuna maombi ya seller yanayosubiri.</div> : <div className="admin-applications">{sellerApplications.map((application) => <article className="application-card" key={application.id}><div><strong>{application.legal_name}</strong><small>{application.phone} · {application.status}</small><p>{application.reason}</p></div>{application.status === 'pending' && <div className="application-actions"><button onClick={() => void reviewSeller(application.id, 'approved')}>Idhinisha</button><button onClick={() => void reviewSeller(application.id, 'rejected')}>Kataa</button></div>}</article>)}</div>}</>}</section>;
+    if (active === 'seller') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">SELLER CENTER</span><h2>Uza mikeka yako</h2><p>Admin lazima aidhinishe akaunti na kukagua kila listing kabla ya kuchapishwa sokoni.</p></div><span className="approval-badge">{profile?.role === 'seller' ? 'Seller ameidhinishwa' : 'Approval inahitajika'}</span></div><div className="seller-layout"><div className="seller-benefits"><div className="seller-symbol">✦</div><h3>Jenga biashara yako ya tips</h3><ul><li>Wasifu wa tipster na rekodi zinazoonekana</li><li>Listings zenye bei na maelezo wazi</li><li>Ripoti za mauzo na earnings</li><li>Platform commission inayopendekezwa: 10%</li></ul><p className="muted-note">Malipo, wallet na withdrawals bado vimezimwa hadi provider na compliance vikaguliwe.</p></div>{profile?.role === 'seller' ? <div className="seller-form"><h3>Chapisha listing mpya</h3><form onSubmit={(event) => void createListing(event)}><label>Kichwa cha mkeka / uchambuzi<input required maxLength={140} value={listingTitle} onChange={(e) => setListingTitle(e.target.value)} placeholder="Mfano: Uchambuzi wa mechi za leo" /></label><label>Maelezo<textarea value={listingDescription} onChange={(e) => setListingDescription(e.target.value)} maxLength={3000} placeholder="Eleza uchambuzi wako kwa uwazi..." /></label><label>Mchezo<select value={listingSport} onChange={(e) => setListingSport(e.target.value)}><option value="football">Mpira wa miguu</option><option value="basketball">Basketball</option><option value="tennis">Tennis</option><option value="other">Mengineyo</option></select></label><label>Bei (TSh)<input required type="number" min="0" step="1" value={listingPrice} onChange={(e) => setListingPrice(e.target.value)} placeholder="0 kwa bure" /></label><button className="primary-button" type="submit">Tuma listing kwa Admin</button></form><h3 className="admin-section-title">Listings zako</h3>{sellerListings.length === 0 ? <p className="muted-note">Bado hujatuma listing.</p> : sellerListings.map((listing) => <div className="seller-listing-row" key={listing.id}><strong>{listing.title}</strong><small>{listing.status} · {listing.price_tzs.toLocaleString('en-US')} TSh</small></div>)}</div> : <form className="seller-form" onSubmit={(e) => { e.preventDefault(); if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kutuma ombi la seller.'); return; } void apiRequest('/api/v1/seller-applications', authUser, { method: 'POST', body: JSON.stringify({ legal_name: sellerName, phone: sellerPhone, reason: sellerReason }) }).then(() => { setSellerSent(true); setNotice('Ombi limetumwa. Status: PENDING.'); }).catch((error: Error) => setNotice(error.message)); }}><h3>Maombi ya seller</h3><label>Jina kamili<input required value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Jina lako" /></label><label>Namba ya simu<input required type="tel" value={sellerPhone} onChange={(e) => setSellerPhone(e.target.value)} placeholder="07XX XXX XXX" /></label><label>Kwa nini unataka kuwa seller?<textarea required value={sellerReason} onChange={(e) => setSellerReason(e.target.value)} placeholder="Eleza uzoefu wako na aina ya uchambuzi..." /></label><button className="primary-button" type="submit" disabled={!authReady}>Tuma maombi ya seller</button>{sellerSent && <p className="form-notice">Ombi lako limepokelewa na linasubiri ukaguzi wa Admin.</p>}</form>}</div></section>;
+    if (active === 'admin') return <section className="module-page"><div className="module-intro"><div><span className="section-overline">CONTROL PANEL</span><h2>Admin dashboard</h2><p>Usimamizi wa seller applications na marketplace kwa ruhusa za server.</p></div><span className="approval-badge">{profile?.role === 'admin' ? 'Admin amethibitishwa' : 'Admin access'}</span></div>{!authUser ? <div className="admin-warning">Ingia kwenye akaunti ya Admin ili kufungua control panel.</div> : profile?.role !== 'admin' ? <div className="admin-warning">Akaunti hii haina ruhusa ya Admin. Role inathibitishwa na backend; mmiliki wa mfumo anahitaji kukamilisha bootstrap ya Admin wa kwanza.</div> : <><h3 className="admin-section-title">Maombi ya seller</h3>{sellerApplications.length === 0 ? <div className="empty-state">Hakuna maombi ya seller yanayosubiri.</div> : <div className="admin-applications">{sellerApplications.map((application) => <article className="application-card" key={application.id}><div><strong>{application.legal_name}</strong><small>{application.phone} · {application.status}</small><p>{application.reason}</p></div>{application.status === 'pending' && <div className="application-actions"><button onClick={() => void reviewSeller(application.id, 'approved')}>Idhinisha</button><button onClick={() => void reviewSeller(application.id, 'rejected')}>Kataa</button></div>}</article>)}</div>}<h3 className="admin-section-title">Listings zinazosubiri ukaguzi</h3>{adminListings.length === 0 ? <div className="empty-state">Hakuna listing inayosubiri ukaguzi.</div> : <div className="admin-applications">{adminListings.map((listing) => <article className="application-card" key={listing.id}><div><strong>{listing.title}</strong><small>{listing.seller_name} · {listing.price_tzs.toLocaleString('en-US')} TSh</small><p>{listing.description}</p></div><div className="application-actions"><button onClick={() => void reviewListing(listing.id, 'published')}>Chapisha</button><button onClick={() => void reviewListing(listing.id, 'rejected')}>Kataa</button></div></article>)}</div>}</>}</section>;
 
     return <><section className="hero-panel"><div className="hero-copy"><span className="hero-kicker">ZAIDI YA MIKeka. NI JAMII.</span><h2>Maarifa ya michezo.<br /><em>Thamani ya pamoja.</em></h2><p>Sehemu moja ya kupata tips, kujifunza kutoka kwa wengine na kushiriki uchambuzi wako.</p><div className="hero-actions"><button className="hero-primary" onClick={() => go('marketplace')}>Gundua marketplace <span>→</span></button><button className="hero-secondary" onClick={() => go('community')}>Tembelea jamii</button></div></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="ball">⚽</div><div className="floating-card card-top"><span>✦</span><div><b>Tips zenye chanzo</b><small>Uwazi kwanza</small></div></div><div className="floating-card card-bottom"><span>◎</span><div><b>Jenga jamii</b><small>Shiriki uchambuzi</small></div></div></div><div className="hero-index">01 <span>/</span> 04</div></section>
     <section className="section-heading"><div><span className="section-overline">CHAGUA UNACHOTAFUTA</span><h2>Gundua jukwaa</h2></div><button className="text-link" onClick={() => go('marketplace')}>Angalia yote <span>→</span></button></section>

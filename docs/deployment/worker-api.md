@@ -1,33 +1,48 @@
-# Worker API and deployment
+# Production URLs and Worker API
 
-Production preview URL: https://wazee-wa-betting-tz.stewardjackson999.workers.dev
-
-## Runtime
-- Entry point: `worker/preview.js`
-- Auth client module: `worker/auth.js`
+- Public website: https://wazee-wa-betting-tz.pages.dev/
+- API Worker: https://wazee-wa-betting-tz.stewardjackson999.workers.dev
+- Cloudflare Pages project: `wazee-wa-betting-tz`
+- Worker entry point: `worker/preview.js`
+- Firebase Auth client module: `src/lib/firebase.ts`
 - D1 binding: `DB` → `wazee-wa-betting-tz-db`
 - Firebase ID-token audience/project: `wazee-wa-betting-tz-e7183`
-- No Firebase service-account key is used; the Worker verifies Firebase ID tokens with Google's published JWK set.
-- Secrets are not stored in source. The Firebase project ID and Firebase web API key are public client configuration values.
 
-## Endpoints
+The Worker verifies Firebase ID-token signature, issuer, audience and expiry against Google's published JWK set. It does not use a Firebase service-account key. Firebase web API configuration values are public client configuration and must not be confused with server secrets.
+
+## Implemented API endpoints
+
 - `GET /health` — Worker health.
 - `GET /api/health` — D1 connectivity and schema table count.
 - `GET /api/v1/listings` — published listings only.
 - `GET /api/v1/community/posts` — public community feed.
 - `GET /api/v1/me` — authenticated profile bootstrap.
 - `POST /api/v1/community/posts` — authenticated post creation.
+- `PUT /api/v1/community/posts/:id/like` — authenticated like toggle.
+- `GET /api/v1/community/posts/:id/comments` — comments for a post.
+- `POST /api/v1/community/posts/:id/comments` — authenticated comment creation.
+- `PUT /api/v1/users/:id/follow` — authenticated follow toggle.
 - `POST /api/v1/seller-applications` — authenticated seller application.
-- `GET /api/v1/seller-applications/me` — authenticated seller application status.
+- `GET /api/v1/seller-applications/me` — authenticated application status.
+- `GET /api/v1/seller/listings/me` — seller's own listings.
+- `POST /api/v1/seller/listings` — seller-only listing submission; status starts as `pending_review`.
+- `GET /api/v1/admin/seller-applications` — admin-only seller queue.
+- `POST /api/v1/admin/seller-applications/:id/decision` — admin-only approve/reject.
+- `GET /api/v1/admin/listings` — admin-only pending listing queue.
+- `POST /api/v1/admin/listings/:id/decision` — admin-only publish/reject.
 
-All protected endpoints require `Authorization: Bearer <Firebase ID token>`. Admin review, listing creation, sports-provider ingestion and wallet mutation routes are not enabled yet.
+All protected endpoints require `Authorization: Bearer <Firebase ID token>`. The Worker resolves user roles from D1 and never trusts a client-supplied role. Moderation decisions are audited.
 
 ## Deployment
-Use the Wrangler config in `wrangler.jsonc`. Deployment requires an authorized Cloudflare session or a project-scoped API token stored as a GitHub Actions secret. Never put the token in the repository.
+
+- Frontend: Cloudflare Pages Git-connected project, production branch `main`, build `npm run build`, output `dist`.
+- API: Cloudflare Worker `wazee-wa-betting-tz`, D1 binding `DB`.
+- Keep provider credentials and other secrets in Cloudflare Worker secrets only.
+- No production schema migration or Firebase Firestore write is part of this deployment.
 
 ## Current safety boundaries
-- D1 contains no imported legacy Firestore data.
-- No Firebase Firestore production writes.
-- No live payments, purchases, seller payouts or withdrawals.
-- No sports fixtures, odds or results are generated without a verified provider.
-- The wallet ledger schema exists but has no live money movement endpoints.
+
+- D1 is a new, separate database; no legacy Firestore data was imported.
+- No checkout, deposits, purchases, wallet balance mutation, commission collection, seller payout or withdrawal endpoint is enabled.
+- The wallet ledger schema is a future accounting foundation only.
+- Sports fixtures, odds and results are not fabricated; provider credentials and coverage tests remain pending.
