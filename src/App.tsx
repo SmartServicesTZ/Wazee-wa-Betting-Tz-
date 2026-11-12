@@ -98,7 +98,7 @@ function App() {
         .catch(() => setNotice('Marketplace haipatikani kwa sasa.'));
     }
     if (active === 'community') {
-      void apiRequest<{ items: Array<{ id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts')
+      void apiRequest<{ items: Array<{ id: string; author_id: string; body: string; author_name: string; likes_count: number; comments_count: number; created_at: string }> }>('/api/v1/community/posts')
         .then((data) => setPosts((data.items || []).map((post) => ({ id: post.id, authorId: post.author_id, author: post.author_name || 'Mwanachama', text: post.body, likes: post.likes_count || 0, liked: false, comments: post.comments_count || 0, time: post.created_at }))));
     }
     if (active === 'sports') {
