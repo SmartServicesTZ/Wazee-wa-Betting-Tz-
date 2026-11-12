@@ -325,3 +325,48 @@ body{background:radial-gradient(ellipse at 86% 0%,#fcefe8 0,transparent 30%),#f4
   .discovery-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .community-layout { grid-template-columns:minmax(0,1fr) 210px; }
 }
+
+
+/* WAZEE IDENTITY: green + electric blue + black, with a clean light canvas */
+:root { color:#101820; background:#f5f8f7; }
+body { color:#101820; background:#f5f8f7; }
+.sidebar { background:#101820; border-right-color:#202d38; }
+.brand { color:#fff; }
+.brand-mark { background:linear-gradient(145deg,#07864f,#1269bd); box-shadow:0 7px 18px #087c5038; }
+.brand small { color:#b8c9d5; }
+.sidebar-label,.section-overline { color:#8293a1; }
+.nav-item { color:#b9c5ce; }
+.nav-item:hover { background:#1b2b36; color:#fff; }
+.nav-item.active { background:linear-gradient(100deg,#087c4c30,#176fc52c); color:#57d69a; box-shadow:inset 3px 0 #16a765; }
+.sidebar-foot { color:#91a0ab; }
+.seller-card { background:linear-gradient(145deg,#172b31,#172333); border-color:#2b3d48; color:#fff; }
+.seller-card p { color:#aebdc6; }
+.seller-card-icon { background:#0b7049; color:#baffd9; }
+.seller-card button { color:#58d99b; }
+.primary-button { background:linear-gradient(105deg,#07864f,#126fc1); color:#fff; box-shadow:0 7px 16px #08794d2b; }
+.login-button { color:#101820; border-color:#d8e1e6; }
+.topbar { background:#ffffffed; border-bottom-color:#e2e9ed; }
+.breadcrumb strong { color:#101820; }
+.welcome-row h1,.module-intro h2,.section-heading h2,.listing-card h3,.builder-form h3,.builder-slip h3,.seller-form h3 { color:#101820; }
+.eyebrow { color:#07864f; }
+.eyebrow-dot { background:#13a66a; box-shadow:0 0 0 4px #e0f5e9; }
+.filter-chip.selected { background:#e1f5e9; border-color:#b7e7ca; color:#087b49; }
+.listing-card { border-color:#dce7e7; box-shadow:0 5px 18px #122b3a08; }
+.listing-card strong { color:#087b49; }
+.count-pill { background:#e7f3ff; color:#1269b4; border-color:#cce4fa; }
+.sports-tab.active { color:#087b49; border-bottom-color:#087b49; }
+.outline-button { color:#087b49; border-color:#b9dfca; }
+.empty-state { background:#fff; border-color:#cddbdc; }
+.empty-state h3 { color:#101820; }
+.empty-market { background:#fff; border-color:#d1dfdf; }
+.empty-market button { color:#087b49; }
+.mobile-bottom-nav { background:#101820 !important; border-top-color:#263945 !important; }
+.mobile-bottom-nav button { color:#aab9c4; }
+.mobile-bottom-nav button.mobile-active { color:#54d894; }
+.mobile-menu { background:#e8f4ee; color:#087b49; }
+.notice-bar { border-left-color:#07864f; }
+a { color:#126fc1; }
+@media (max-width:900px), (hover:none) and (pointer:coarse) {
+ .sidebar { background:#101820; }
+ .mobile-bottom-nav button.mobile-active { color:#54d894; }
+}
