@@ -133,3 +133,5 @@
 .profile-edit-form textarea{min-height:75px;resize:vertical}
 .profile-follow{width:100%;margin-top:17px}
 @media(max-width:560px){.member-profile-card{padding:22px 17px}.member-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.avatar-button{border:0;cursor:pointer;font:inherit}
