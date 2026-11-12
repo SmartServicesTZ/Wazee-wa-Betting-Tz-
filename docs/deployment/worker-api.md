@@ -14,7 +14,11 @@ The Worker verifies Firebase ID-token signature, issuer, audience and expiry aga
 
 - `GET /health` — Worker health.
 - `GET /api/health` — D1 connectivity and schema table count.
-- `GET /api/v1/listings` — published listings only.
+- `GET /api/v1/listings` — published listings with public teaser text only.
+- `GET /api/v1/sports/providers` — public provider health/status metadata.
+- `GET /api/v1/sports/fixtures` — stored fixtures with provider and freshness metadata.
+- `GET /api/v1/sports/results` — stored results with source metadata.
+- `GET /api/v1/sports/odds?fixture_id=:id` — odds snapshots for a fixture.
 - `GET /api/v1/community/posts` — public community feed.
 - `GET /api/v1/me` — authenticated profile bootstrap.
 - `POST /api/v1/community/posts` — authenticated post creation.
