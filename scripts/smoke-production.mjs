@@ -18,7 +18,15 @@ async function check(name, url) {
     if (!html.includes('<div id="root"></div>') || !html.includes("Wazee wa Betting TZ")) {
       throw new Error("Website response is missing the React app shell or title.");
     }
-    return "HTTP " + response.status + " · app shell OK";
+    const scriptPath = html.match(/<script[^>]+src="([^"]+\\.js)"/)?.[1];
+    if (!scriptPath) throw new Error("Production JavaScript bundle was not found in the HTML.");
+    const bundleResponse = await fetch(new URL(scriptPath, url), { signal: AbortSignal.timeout(15000) });
+    if (!bundleResponse.ok) throw new Error("Production JavaScript bundle returned HTTP " + bundleResponse.status);
+    const bundle = await bundleResponse.text();
+    if (!bundle.includes("Thibitisha password") || !bundle.includes("Password na uthibitisho wake havifanani")) {
+      throw new Error("Live registration bundle is missing password confirmation validation.");
+    }
+    return "HTTP " + response.status + " · app shell and registration flow OK";
   }
   if (!type.includes("application/json")) throw new Error(name + " did not return JSON.");
   const data = await response.json();
