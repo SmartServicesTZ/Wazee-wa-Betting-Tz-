@@ -574,3 +574,40 @@ body { background:radial-gradient(circle at 84% -8%,#dceeff 0,transparent 28rem)
   .poster-history-list li { align-items:flex-start; flex-direction:column; }
   .history-download { width:100%; }
 }
+
+
+/* Settings and account actions live inside the main menu */
+.sidebar-account { display:grid; gap:8px; margin:16px 0 4px; padding:12px; border:1px solid #e0e9f0; border-radius:14px; background:#f8fbfd; }
+.sidebar-profile { display:flex; align-items:center; gap:10px; width:100%; padding:0; border:0; background:transparent; color:#17334d; text-align:left; cursor:pointer; }
+.sidebar-profile>span:last-child { display:grid; gap:3px; min-width:0; }
+.sidebar-profile strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.sidebar-profile small { color:#73869a; font-size:11px; }
+.sidebar-avatar { display:grid; flex:none; width:36px; height:36px; place-items:center; border-radius:50%; background:linear-gradient(145deg,#1478e8,#11a77d); color:#fff; font-weight:900; }
+.sidebar-logout,.sidebar-login { width:100%; min-height:38px; border:1px solid #d8e3ec; border-radius:9px; background:#fff; color:#536a80; font-size:12px; font-weight:800; cursor:pointer; }
+.sidebar-logout:hover,.sidebar-login:hover { border-color:#efb6b6; background:#fff5f5; color:#b42332; }
+.settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:22px; }
+.settings-card { display:grid; grid-template-columns:42px minmax(0,1fr); align-items:start; gap:10px 12px; padding:19px; border:1px solid #dce7ef; border-radius:16px; background:#fff; box-shadow:0 8px 24px #163b5808; }
+.settings-icon { display:grid; width:40px; height:40px; place-items:center; border-radius:12px; background:#edf5ff; color:#176de0; font-size:20px; font-weight:900; }
+.settings-card h3 { margin:1px 0 5px; color:#18334d; font-size:15px; }
+.settings-card p { margin:0; color:#6a7f92; font-size:12px; line-height:1.55; }
+.settings-choice,.settings-switch,.settings-action,.settings-detail,.settings-note { grid-column:2; }
+.settings-choice { display:flex; flex-wrap:wrap; gap:7px; }
+.settings-choice button { min-height:35px; padding:7px 12px; border:1px solid #d8e4ee; border-radius:9px; background:#fff; color:#526b82; font-size:12px; font-weight:800; cursor:pointer; }
+.settings-choice button.selected { border-color:#9bc8f4; background:#eaf4ff; color:#1265c5; }
+.settings-switch { display:flex; align-items:center; gap:9px; color:#31516d; font-size:12px; font-weight:800; }
+.settings-switch input { width:18px; height:18px; accent-color:#1676df; }
+.settings-action { justify-self:start; padding:8px 11px; border:1px solid #d6e4f0; border-radius:9px; background:#f8fbff; color:#1767c3; font-size:12px; font-weight:800; text-decoration:none; cursor:pointer; }
+.settings-note { color:#8594a3; font-size:10px; line-height:1.5; }
+.settings-about { align-items:center; }
+.settings-about small { display:block; margin-top:6px; color:#8a9aaa; font-size:11px; }
+.theme-dark { background:#101a27; color:#e5edf5; }
+.theme-dark .main-area { background:#101a27; }
+.theme-dark .topbar,.theme-dark .module-page,.theme-dark .settings-card,.theme-dark .empty-state,.theme-dark .fixture-card { background:#172536; border-color:#2b4055; color:#e5edf5; }
+.theme-dark .breadcrumb,.theme-dark .module-intro h2,.theme-dark .settings-card h3,.theme-dark .settings-card p,.theme-dark .settings-detail { color:#e5edf5; }
+.theme-dark .settings-card,.theme-dark .settings-choice button,.theme-dark .settings-action { background:#1b2b3e; border-color:#344b62; color:#dce8f3; }
+.theme-dark .settings-choice button.selected { background:#153b61; border-color:#367fc0; color:#b9dcff; }
+.theme-dark .sidebar-account { background:#15263a; border-color:#2e455d; }
+.theme-dark .sidebar-profile { color:#e5edf5; }
+.theme-dark .sidebar-profile small,.theme-dark .settings-note { color:#a4b4c4; }
+.theme-dark .sidebar-logout,.theme-dark .sidebar-login { background:#1b2b3e; border-color:#344b62; color:#dce8f3; }
+@media (max-width:760px) { .settings-grid { grid-template-columns:1fr; } .sidebar-account { margin-top:12px; } }
