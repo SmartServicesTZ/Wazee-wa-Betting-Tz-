@@ -44,13 +44,13 @@ const toPosterSelections = (items: Pick[]): PosterSelection[] => items.map((pick
 }));
 
 const navItems: { id: Section; label: string; icon: string }[] = [
-  { id: 'wallet', label: 'Akaunti ya salio', icon: '◈' },
-  { id: 'marketplace', label: 'Uwanja wa mikeka', icon: '▤' },
   { id: 'overview', label: 'Mwanzo', icon: '⌂' },
   { id: 'community', label: 'Jamii', icon: '◎' },
+  { id: 'marketplace', label: 'Uwanja wa mikeka', icon: '▤' },
   { id: 'sports', label: 'Michezo', icon: '◉' },
   { id: 'builder', label: 'Jenga mkeka', icon: '＋' },
   { id: 'seller', label: 'Seller Center', icon: '♙' },
+  { id: 'wallet', label: 'Akaunti ya salio', icon: '◈' },
   { id: 'settings', label: 'Settings', icon: '⚙' },
   { id: 'admin', label: 'Admin Dashboard', icon: '▦' },
 ];
