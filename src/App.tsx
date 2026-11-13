@@ -239,7 +239,7 @@ function App() {
       setWalletBusy(true);
       void apiRequest<MyWallet>('/api/v1/me/wallet', authUser).then(setMyWallet).catch((error: Error) => setNotice(error.message)).finally(() => setWalletBusy(false));
     }
-    if (active === 'seller' && authUser && profile?.role === 'seller')
+    if (active === 'seller' && authUser && profile?.role === 'seller') {
       void apiRequest<{ items: SellerListing[] }>('/api/v1/seller/listings/me', authUser)
         .then((data) => setSellerListings(data.items || []))
         .catch((error: Error) => setNotice(error.message));
