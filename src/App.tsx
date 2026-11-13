@@ -65,58 +65,12 @@ const friendlyAuthError = (error: unknown): string => {
  return 'Imeshindikana kuingia au kujisajili. Hakiki taarifa zako kisha ujaribu tena.';
 };
 
-type DemoTeam = { name: string; logo: string; };
-const demoTeams: Record<string, DemoTeam> = {
-  'Arsenal': { name: 'Arsenal', logo: 'https://media.api-sports.io/football/teams/42.png' },
-  'Real Madrid': { name: 'Real Madrid', logo: 'https://media.api-sports.io/football/teams/541.png' },
-  'Inter Milan': { name: 'Inter Milan', logo: 'https://media.api-sports.io/football/teams/505.png' },
-  'Barcelona': { name: 'Barcelona', logo: 'https://media.api-sports.io/football/teams/529.png' },
-  'Bayern Munich': { name: 'Bayern Munich', logo: 'https://media.api-sports.io/football/teams/157.png' },
-  'Liverpool': { name: 'Liverpool', logo: 'https://media.api-sports.io/football/teams/40.png' },
-  'PSG': { name: 'Paris Saint-Germain', logo: 'https://media.api-sports.io/football/teams/85.png' },
-  'Juventus': { name: 'Juventus', logo: 'https://media.api-sports.io/football/teams/496.png' },
-};
-const getDemoTeam = (selection: string): DemoTeam => {
-  const teamName = Object.keys(demoTeams).find((name) => selection.toLowerCase().includes(name.toLowerCase()));
-  return teamName ? demoTeams[teamName] : { name: 'Timu', logo: '' };
-};
-type DemoTicket = { id: number; title: string; category: string; posted: string; selections: string[]; sampleOdds: string; };
-const buildDemoPoster = (ticket: DemoTicket) => ({
-  title: ticket.title,
-  sourceLabel: 'DEMO PREVIEW',
-  accessLabel: 'TEST ONLY',
-  dateLabel: 'SAMPLE DATE · NOT A REAL FIXTURE LIST',
-  statusLabel: 'SAMPLE DATA · ODDS HAZIJATHIBITISHWA · HAKUNA AI',
-  testOnly: true,
-  selections: ticket.selections.map((selection, index) => ({
-    homeTeam: `SAMPLE · ${getDemoTeam(selection).name}`,
-    awayTeam: `SAMPLE OPPONENT ${String(index + 1).padStart(2, '0')}`,
-    market: 'SAMPLE PICK',
-    prediction: selection,
-    competition: 'LIGI HAIPATIKANI · TEST ONLY',
-    kickoffAt: 'MUDA HAUPATIKANI · TEST ONLY',
-    odds: {
-      selected: Math.pow(Number(ticket.sampleOdds), 1 / ticket.selections.length),
-      source: 'SYNTHETIC TEST ONLY',
-    },
-  })),
-});
-
-const demoTickets: DemoTicket[] = [
- { id: 1, title: 'Mkeka wa mfano #01', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Arsenal kushinda', 'Real Madrid zaidi ya magoli 1.5', 'Inter Milan kupata goli'], sampleOdds: '3.40' },
- { id: 2, title: 'Mkeka wa mfano #02', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Barcelona kushinda au sare', 'Bayern Munich zaidi ya magoli 1.5'], sampleOdds: '2.15' },
- { id: 3, title: 'Mkeka wa mfano #03', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Liverpool kupata goli', 'PSG zaidi ya kona 3.5', 'Juventus under 4.5'], sampleOdds: '3.05' },
-];
 
 function App() {
-  const [active, setActive] = useState<Section>('marketplace');
+  const [active, setActive] = useState<Section>('overview');
   const [category, setCategory] = useState('Zote');
   const [marketSearch, setMarketSearch] = useState('');
   const [marketSort, setMarketSort] = useState('newest');
-  const [demoLiked, setDemoLiked] = useState<number[]>([]);
-  const [demoCommentOpen, setDemoCommentOpen] = useState<number | null>(null);
-  const [demoCommentDraft, setDemoCommentDraft] = useState('');
-  const [demoComments, setDemoComments] = useState<Record<number, string[]>>({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [appearance, setAppearance] = useState<'light' | 'dark'>(() => (localStorage.getItem('wazee-appearance') as 'light' | 'dark') || 'light');
   const [language, setLanguage] = useState<'sw' | 'en'>(() => (localStorage.getItem('wazee-language') as 'sw' | 'en') || 'sw');
@@ -345,39 +299,6 @@ function App() {
     } catch (error) { setNotice((error as Error).message); }
   };
 
-  const toggleDemoLike = (ticketId: number) => {
-    setDemoLiked((current) => current.includes(ticketId) ? current.filter((id) => id !== ticketId) : [...current, ticketId]);
-  };
-
-  const submitDemoComment = (ticketId: number) => {
-    if (!demoCommentDraft.trim()) return;
-    setDemoComments((current) => ({ ...current, [ticketId]: [...(current[ticketId] || []), demoCommentDraft.trim()] }));
-    setDemoCommentDraft('');
-    setNotice('Maoni ya mfano yameongezwa kwenye chapisho hili.');
-  };
-
-  const exportDemoTicket = async (ticket: DemoTicket, shouldShare = false) => {
-    const demoPoster = buildDemoPoster(ticket);
-    try {
-      const result = await renderTicketPng(demoPoster);
-      const file = new File([result.blob], `TEST-ONLY-wazee-ticket-${ticket.id}.png`, { type: 'image/png' });
-      if (shouldShare && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: 'Wazee wa Betting TZ · TEST ONLY', text: 'Picha hii ni mfano wa muundo tu; si mechi au odds halisi.', files: [file] });
-        setNotice('PNG ya mfano imeshirikishwa. Ni TEST ONLY, si mkeka halisi.');
-      } else {
-        const url = URL.createObjectURL(result.blob);
-        const anchor = document.createElement('a');
-        anchor.href = url; anchor.download = file.name; anchor.click();
-        window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-        setNotice(shouldShare ? 'Kifaa hiki hakiruhusu file share; PNG ya TEST ONLY imepakuliwa.' : 'PNG ya TEST ONLY imepakuliwa; si tip au odds halisi.');
-      }
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') setNotice((error as Error).message || 'Imeshindikana kutengeneza PNG ya mfano.');
-    }
-  };
-
-  const shareDemoTicket = async (ticket: DemoTicket) => exportDemoTicket(ticket, true);
-
   const toggleLike = async (postId: string) => {
     if (!authUser) { setAuthMode('login'); setNotice('Ingia kwanza ili kuweka like.'); return; }
     try {
@@ -491,48 +412,25 @@ function App() {
   };
 
   const pageContent = () => {
+    if (active === 'overview') return <section className="home-dashboard">
+      <div className="home-hero-3d"><div className="home-hero-copy"><span className="home-kicker"><i/> WAZEE WA BETTING TZ</span><h1>Karibu kwenye<br/><em>uwanja wa ushindi.</em></h1><p>Habari za michezo, uchambuzi wa mikeka na jamii ya wachambuzi sehemu moja.</p><div className="home-hero-actions"><button className="home-main-cta" onClick={() => go('marketplace')}>Angalia mikeka <span>↗</span></button><button className="home-ghost-cta" onClick={() => go('builder')}>＋ Jenga mkeka</button></div></div><div className="home-hero-art" aria-hidden="true"><div className="home-orbit orbit-one"></div><div className="home-orbit orbit-two"></div><div className="home-ball">⚽</div><div className="home-glass-card glass-top"><small>UWANJA WA MIKeka</small><strong>{listings.length}</strong><span>Machapisho yaliyopo</span></div><div className="home-glass-card glass-bottom"><small>JAMII YA WAZEE</small><strong>W</strong><span>Maarifa · Michezo · Uchambuzi</span></div></div></div>
+      <div className="home-section-head"><div><span className="section-overline">ENDELEA NA SAFARI</span><h2>Chagua unachotaka kufanya</h2><p>Sehemu kuu za jukwaa lako.</p></div></div>
+      <div className="home-action-grid">
+        <button className="home-action-card action-blue" onClick={() => go('marketplace')}><span className="action-icon">▤</span><small>01 · MIKeka</small><strong>Uwanja wa Mikeka</strong><p>Angalia machapisho rasmi na ya wachambuzi.</p><b>Fungua uwanja <i>↗</i></b></button>
+        <button className="home-action-card action-violet" onClick={() => go('builder')}><span className="action-icon">＋</span><small>02 · JENGA</small><strong>Jenga Mkeka</strong><p>Chagua mechi na tengeneza tiketi yako.</p><b>Anza kujenga <i>↗</i></b></button>
+        <button className="home-action-card action-green" onClick={() => go('sports')}><span className="action-icon">◉</span><small>03 · MICHEZO</small><strong>Michezo na Odds</strong><p>Fuatilia ratiba na taarifa za michezo.</p><b>Angalia michezo <i>↗</i></b></button>
+        <button className="home-action-card action-orange" onClick={() => go('community')}><span className="action-icon">◎</span><small>04 · JAMII</small><strong>Jamii ya Wazee</strong><p>Shiriki uchambuzi na maoni na wanachama.</p><b>Jiunge na jamii <i>↗</i></b></button>
+      </div>
+      <div className="home-lower-grid"><div className="home-lower-card"><div><span className="section-overline">JUKWAA</span><h3>Muhtasari wa shughuli</h3></div><div className="home-stat-row"><span><b>{listings.length}</b><small>Mikeka iliyochapishwa</small></span><span><b>{posts.length}</b><small>Machapisho ya jamii</small></span><span><b>{picks.length}</b><small>Chaguo kwenye mkeka</small></span></div></div><div className="home-lower-card home-profile-card"><span className="home-profile-avatar">{(profile?.display_name || 'W').slice(0,1).toUpperCase()}</span><div><small>AKAUNTI YAKO</small><h3>{authUser ? profile?.display_name || 'Mwanachama' : 'Karibu mwanachama'}</h3><p>{authUser ? 'Endelea kusimamia akaunti yako na salio.' : 'Ingia ili kufungua huduma zote za akaunti.'}</p><button onClick={() => go(authUser ? 'settings' : 'marketplace')}>{authUser ? 'Simamia akaunti ↗' : 'Gundua jukwaa ↗'}</button></div></div></div>
+      <div className="home-footnote">Taarifa za mechi na odds huonyeshwa pale zinapopatikana kutoka chanzo husika. Uchambuzi si dhamana ya ushindi.</div>
+    </section>;
     if (active === 'marketplace') return <section className="module-page market-feed-page">
-      <div className="market-feed-heading">
-        <div><span className="section-overline">WAZEE WA BETTING TZ · RASMI</span><h1>Uwanja wa Mikeka</h1><p>Mikeka iliyoshirikishwa na wachambuzi wa jukwaa.</p></div>
-        <button className="primary-button" onClick={() => go('builder')}>＋ Jenga mkeka</button>
-      </div>
-      <div className="official-banner"><span className="official-avatar">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>Akaunti rasmi ya jukwaa · Mikeka rasmi na ya wachambuzi walioidhinishwa</small></div><span className="official-tag">RASMI</span></div>
-      <div className="demo-notice"><strong>TAARIFA:</strong> Mikeka 3 hapa ni mifano ya kuonyesha muundo wa machapisho. Si mechi za sasa, si odds za live, na haimaanishi ushindi umehakikishwa.</div>
+      <div className="market-feed-heading"><div><span className="section-overline">WAZEE WA BETTING TZ · RASMI</span><h1>Uwanja wa Mikeka</h1><p>Mikeka iliyoshirikishwa na wachambuzi wa jukwaa.</p></div><button className="primary-button" onClick={() => go('builder')}>＋ Jenga mkeka</button></div>
+      <div className="official-banner"><span className="official-avatar">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick">✓</span></strong><small>Akaunti rasmi ya jukwaa · Mikeka rasmi na ya wachambuzi walioidhinishwa</small></div><span className="official-tag">RASMI</span></div>
       <div className="market-toolbar"><div className="filter-row">{categories.map((item) => <button key={item} className={category === item ? 'filter-chip selected' : 'filter-chip'} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="market-search-controls"><input className="search-input" value={marketSearch} onChange={(event) => setMarketSearch(event.target.value)} placeholder="Tafuta mkeka..." /><select className="market-sort" value={marketSort} onChange={(event) => setMarketSort(event.target.value)}><option value="newest">Mpya kwanza</option><option value="price_low">Bei: ndogo kwanza</option><option value="price_high">Bei: kubwa kwanza</option></select></div></div>
-      <div className="feed-section-label"><strong>Mikeka iliyopostiwa</strong><span>{demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).length + filteredListings.length} machapisho</span></div>
-      <div className="listing-grid feed-listing-grid">
-        {demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).map((ticket) => <article className="listing-card demo-ticket-card" key={'demo-' + ticket.id}>
-          <div className="ticket-author-row"><span className="official-avatar small">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>{ticket.posted}</small></div><span className="demo-pill">DEMO</span></div>
-          <div className="ticket-poster-render" style={{ background: '#080d15', borderRadius: 16, overflow: 'hidden', lineHeight: 0 }}>
-            <img
-              src={ticketPosterSvgDataUrl(buildDemoPoster(ticket))}
-              alt={`${ticket.title} — poster ya mfano ya TEST ONLY`}
-              loading="lazy"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-            />
-          </div>
-          <div className="ticket-poster-source"><span>ODDS, LOGOS NA MATOKEO HALISI HUONYESHWA TU ZIKIPATIKANA</span><b>DEMO PREVIEW</b></div>
-          <div className="demo-social-actions">
-            <button className={demoLiked.includes(ticket.id) ? 'social-action is-liked' : 'social-action'} onClick={() => toggleDemoLike(ticket.id)} aria-pressed={demoLiked.includes(ticket.id)}><span>♥</span> Like <small>{demoLiked.includes(ticket.id) ? '1' : '0'}</small></button>
-            <button className="social-action" onClick={() => { setDemoCommentOpen(demoCommentOpen === ticket.id ? null : ticket.id); setDemoCommentDraft(''); }}><span>▢</span> Maoni <small>{(demoComments[ticket.id] || []).length}</small></button>
-            <button className="social-action ticket-export" onClick={() => void exportDemoTicket(ticket)}><span>↓</span> DOWNLOAD PNG</button>
-            <button className="social-action ticket-share" onClick={() => void shareDemoTicket(ticket)}><span>↗</span> SHARE IMAGE</button>
-          </div>
-          {demoCommentOpen === ticket.id && <div className="demo-comment-box">
-            {(demoComments[ticket.id] || []).map((comment, index) => <p className="demo-comment-item" key={index}><strong>Mwanachama:</strong> {comment}</p>)}
-            <form onSubmit={(event) => { event.preventDefault(); submitDemoComment(ticket.id); }}><input value={demoCommentDraft} onChange={(event) => setDemoCommentDraft(event.target.value)} placeholder="Andika maoni..." maxLength={300} /><button type="submit" disabled={!demoCommentDraft.trim()}>Tuma</button></form>
-            <small>Maoni haya ni ya majaribio na yanabaki kwenye kifaa hiki kwa muda wa ukurasa.</small>
-          </div>}
-        </article>)}
-        {filteredListings.map((listing) => <article className="listing-card" key={listing.id}>
-          <div className="ticket-author-row"><span className={listing.is_official ? 'official-avatar small' : 'avatar'}>{listing.is_official ? 'W' : (listing.seller_name || 'S').slice(0,1).toUpperCase()}</span><div><strong>{listing.is_official ? 'Wazee wa Betting TZ' : listing.seller_name}{listing.is_official ? <> <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></> : null}</strong><small>{new Date(listing.created_at).toLocaleString('sw-TZ')} · {listing.is_official ? 'Chapisho rasmi' : 'Seller tips'}</small></div><span className={listing.is_official ? 'official-tag' : 'demo-pill'}>{listing.is_official ? 'RASMI' : listing.price_tzs === 0 ? 'BURE' : 'PREMIUM'}</span></div>
-          {listing.selections?.length ? <div className="ticket-poster-render" style={{ background: '#080d15', borderRadius: 16, overflow: 'hidden', lineHeight: 0 }}>
-            <img src={ticketPosterSvgDataUrl({ title: listing.title, sourceLabel: listing.is_official ? 'WAZEE WA BETTING TZ' : listing.seller_name, accessLabel: listing.price_tzs === 0 ? 'FREE' : 'PREMIUM', dateLabel: new Date(listing.created_at).toLocaleString('sw-TZ'), statusLabel: listing.selections.some((item) => Number(item.odds_decimal) > 1) ? 'ODDS ZILIZOPO ZINATOKA KWENYE CHANZO KILICHOTHIBITISHWA' : 'ODDS HAZIJATHIBITISHWA · HAZIJAONYESHWA', selections: listing.selections.map((item) => ({ homeTeam: item.home_name, awayTeam: item.away_name, market: item.market, prediction: item.selection, odds: Number(item.odds_decimal) > 1 ? { selected: item.odds_decimal, source: item.odds_source || 'Provider' } : undefined })) })} alt={listing.title + ' poster'} loading="lazy" style={{ display: 'block', width: '100%', height: 'auto' }} />
-          </div> : <div className="empty-state">Mkeka huu hauna selections zilizohifadhiwa.</div>}
-          <p>{listing.description_preview}</p><div className="ticket-poster-source"><span>UCHAMBUZI TU · HAKUNA UHAKIKA WA USHINDI</span><b>{listing.price_tzs === 0 ? 'BURE' : listing.price_tzs.toLocaleString('en-US') + ' TSh'}</b></div>
-        </article>)}
-      </div>
-      {demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).length === 0 && filteredListings.length === 0 && <div className="empty-state"><h3>Hakuna mkeka unaolingana</h3><p>Badili utafutaji au kundi ulilochagua.</p></div>}
+      <div className="feed-section-label"><strong>Mikeka iliyopostiwa</strong><span>{filteredListings.length} machapisho</span></div>
+      <div className="listing-grid feed-listing-grid">{filteredListings.map((listing) => <article className="listing-card" key={listing.id}><div className="ticket-author-row"><span className={listing.is_official ? 'official-avatar small' : 'avatar'}>{listing.is_official ? 'W' : (listing.seller_name || 'S').slice(0,1).toUpperCase()}</span><div><strong>{listing.is_official ? 'Wazee wa Betting TZ' : listing.seller_name}{listing.is_official ? <> <span className="blue-tick">✓</span></> : null}</strong><small>{new Date(listing.created_at).toLocaleString('sw-TZ')} · {listing.is_official ? 'Chapisho rasmi' : 'Seller tips'}</small></div><span className={listing.is_official ? 'official-tag' : 'demo-pill'}>{listing.is_official ? 'RASMI' : listing.price_tzs === 0 ? 'BURE' : 'PREMIUM'}</span></div>{listing.selections?.length ? <div className="ticket-poster-render" style={{background:'#080d15',borderRadius:16,overflow:'hidden',lineHeight:0}}><img src={ticketPosterSvgDataUrl({title:listing.title,sourceLabel:listing.is_official?'WAZEE WA BETTING TZ':listing.seller_name,accessLabel:listing.price_tzs===0?'FREE':'PREMIUM',dateLabel:new Date(listing.created_at).toLocaleString('sw-TZ'),statusLabel:listing.selections.some((item)=>Number(item.odds_decimal)>1)?'ODDS ZILIZOPO ZINATOKA KWENYE CHANZO KILICHOTHIBITISHWA':'ODDS HAZIJATHIBITISHWA · HAZIJAONYESHWA',selections:listing.selections.map((item)=>({homeTeam:item.home_name,awayTeam:item.away_name,market:item.market,prediction:item.selection,odds:Number(item.odds_decimal)>1?{selected:item.odds_decimal,source:item.odds_source||'Provider'}:undefined}))})} alt={listing.title+' poster'} loading="lazy" style={{display:'block',width:'100%',height:'auto'}}/></div>:<div className="empty-state">Mkeka huu hauna chaguo zilizohifadhiwa.</div>}<p>{listing.description_preview}</p><div className="ticket-poster-source"><span>UCHAMBUZI TU · HAKUNA UHAKIKA WA USHINDI</span><b>{listing.price_tzs===0?'BURE':listing.price_tzs.toLocaleString('en-US')+' TSh'}</b></div></article>)}</div>
+      {filteredListings.length===0 && <div className="empty-state"><h3>Bado hakuna mkeka uliochapishwa</h3><p>Mikeka itaonekana hapa baada ya kuchapishwa na akaunti rasmi au wachambuzi.</p></div>}
     </section>;
     if (active === 'community') return <section className="module-page">
       <div className="module-intro"><div><span className="section-overline">SOCIAL NETWORK</span><h2>Jamii ya Wazee</h2><p>Jadili michezo, shiriki uchambuzi na fuatilia wachambuzi.</p></div></div>
