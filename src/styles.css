@@ -357,7 +357,7 @@ body { background:var(--wz-bg); color:var(--wz-ink); }
 .feed-listing-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
 .demo-ticket-card { min-width:0; padding:15px; background:#fff; border:1px solid #dce5ef; border-radius:15px; box-shadow:0 7px 20px #0b23400a; }
 .ticket-author-row { display:flex; align-items:center; gap:9px; padding-bottom:11px; border-bottom:1px solid #edf1f6; }
-.demo-pill { margin-left:auto; padding:4px 7px; border-radius:5px; background:#e9f1ff; color:#1769e8; font-size:8px; font-weight:900; letter-spacing:.07em; }
+.listing-tier-pill { margin-left:auto; padding:4px 7px; border-radius:5px; background:#e9f1ff; color:#1769e8; font-size:8px; font-weight:900; letter-spacing:.07em; }
 .ticket-title-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:12px 0 9px; }
 .ticket-title-row h3 { margin:0; color:#0c1728; font-size:14px; font-weight:850; }
 .ticket-free { padding:4px 7px; border-radius:6px; background:#e7f8ef; color:#08784f; font-size:8px; font-weight:900; }
