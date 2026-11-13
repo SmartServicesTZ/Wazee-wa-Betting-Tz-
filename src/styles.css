@@ -630,3 +630,27 @@ body { background:radial-gradient(circle at 84% -8%,#dceeff 0,transparent 28rem)
 .home-lower-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:15px}.home-lower-card{padding:19px;border:1px solid #e2eaf1;border-radius:18px;background:#fff;box-shadow:0 7px 0 #e8eef4,0 14px 24px #183a560b}.home-lower-card h3{margin:5px 0 0;font-size:16px;color:#1b3852}.home-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:17px}.home-stat-row span{display:grid;gap:4px;padding:12px;border-radius:12px;background:#f4f8fb}.home-stat-row b{font-size:23px;color:#1c5d86}.home-stat-row small{font-size:9px;color:#77899c}.home-profile-card{display:flex;align-items:center;gap:14px}.home-profile-avatar{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#1c5982,#27a889);color:white;font-size:22px;font-weight:950;box-shadow:0 5px 0 #d9e7ed}.home-profile-card>div>small{font-size:8px;letter-spacing:.13em;font-weight:900;color:#8293a5}.home-profile-card h3{margin:4px 0}.home-profile-card p{margin:4px 0 8px;color:#78899a;font-size:10px}.home-profile-card button{padding:0;border:0;background:none;color:#176fa4;font-size:10px;font-weight:900;cursor:pointer}.home-footnote{padding:12px 15px;border-radius:12px;background:#eef4f8;color:#687d91;font-size:10px;line-height:1.6}
 @media(max-width:900px){.home-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-hero-3d{grid-template-columns:1fr .8fr;padding:28px}.home-lower-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.home-dashboard{gap:17px}.home-hero-3d{grid-template-columns:1fr;min-height:0;padding:24px 20px 16px;border-radius:20px}.home-hero-copy h1{font-size:36px}.home-hero-copy p{font-size:12px}.home-hero-art{min-height:205px;margin-top:8px}.home-ball{width:100px;height:100px;font-size:65px}.home-orbit{width:205px;height:205px}.orbit-two{width:245px;height:245px}.glass-top{right:0;top:8px}.glass-bottom{left:0;bottom:4px}.home-action-grid{gap:11px}.home-action-card{min-height:185px;padding:14px}.home-action-card>strong{font-size:13px}.home-action-card p{font-size:9px}.home-section-head h2{font-size:19px}.home-stat-row{gap:6px}.home-stat-row span{padding:9px}.home-stat-row b{font-size:19px}}
+
+
+/* Home is a social betting feed, not a stats dashboard */
+.home-feed-page { max-width: 1120px; margin: 0 auto; padding-top: 22px; }
+.home-feed-page .market-feed-heading { max-width: 760px; margin: 0 auto 18px; align-items: center; }
+.home-feed-page .market-feed-heading h1 { margin: 4px 0 5px; font-size: clamp(25px,3vw,34px); letter-spacing: -.045em; color: #142d43; }
+.home-feed-page .market-feed-heading p { margin: 0; color: #718397; font-size: 13px; }
+.home-feed-page .official-banner { max-width: 760px; margin: 0 auto 14px; border-radius: 14px; }
+.home-feed-page .market-toolbar { max-width: 760px; margin: 0 auto 15px; padding: 11px 0; border-top: 1px solid #e5edf3; border-bottom: 1px solid #e5edf3; }
+.home-feed-page .feed-section-label { max-width: 760px; margin: 0 auto 10px; }
+.home-feed-page .feed-listing-grid { max-width: 760px; margin: 0 auto; grid-template-columns: minmax(0,1fr); gap: 16px; }
+.home-feed-page .listing-card { border-radius: 17px; padding: 17px; box-shadow: 0 5px 22px #163b580b; }
+.home-feed-page .ticket-poster-render { border-radius: 13px !important; }
+.home-feed-page .listing-card>p { color: #344c61; font-size: 14px; line-height: 1.6; }
+.home-feed-page .market-toolbar .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+.home-feed-page .market-toolbar .filter-chip { white-space: nowrap; }
+@media(max-width:600px) {
+ .home-feed-page { padding: 13px 11px 24px; }
+ .home-feed-page .market-feed-heading { align-items: flex-start; }
+ .home-feed-page .market-feed-heading h1 { font-size: 25px; }
+ .home-feed-page .market-feed-heading p { font-size: 11px; }
+ .home-feed-page .official-banner { padding: 11px; }
+ .home-feed-page .listing-card { padding: 12px; }
+}
