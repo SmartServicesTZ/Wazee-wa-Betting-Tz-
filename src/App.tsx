@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
 import TicketPosterTools from './components/ticket-poster-tools';
-import { renderTicketPng, resolveFresh1X2Odds } from './lib/ticket-poster.js';
+import { renderTicketPng, resolveFresh1X2Odds, ticketPosterSvgDataUrl } from './lib/ticket-poster.js';
 import type { SportsOddsSnapshot, TicketPosterOdds } from './lib/ticket-poster.js';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'admin';
@@ -69,6 +69,27 @@ const getDemoTeam = (selection: string): DemoTeam => {
   return teamName ? demoTeams[teamName] : { name: 'Timu', logo: '' };
 };
 type DemoTicket = { id: number; title: string; category: string; posted: string; selections: string[]; sampleOdds: string; };
+const buildDemoPoster = (ticket: DemoTicket) => ({
+  title: ticket.title,
+  sourceLabel: 'DEMO PREVIEW',
+  accessLabel: 'TEST ONLY',
+  dateLabel: 'SAMPLE DATE · NOT A REAL FIXTURE LIST',
+  statusLabel: 'SAMPLE DATA · ODDS HAZIJATHIBITISHWA · HAKUNA AI',
+  testOnly: true,
+  selections: ticket.selections.map((selection, index) => ({
+    homeTeam: `SAMPLE · ${getDemoTeam(selection).name}`,
+    awayTeam: `SAMPLE OPPONENT ${String(index + 1).padStart(2, '0')}`,
+    market: 'SAMPLE PICK',
+    prediction: selection,
+    competition: 'LIGI HAIPATIKANI · TEST ONLY',
+    kickoffAt: 'MUDA HAUPATIKANI · TEST ONLY',
+    odds: {
+      selected: Math.pow(Number(ticket.sampleOdds), 1 / ticket.selections.length),
+      source: 'SYNTHETIC TEST ONLY',
+    },
+  })),
+});
+
 const demoTickets: DemoTicket[] = [
  { id: 1, title: 'Mkeka wa mfano #01', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Arsenal kushinda', 'Real Madrid zaidi ya magoli 1.5', 'Inter Milan kupata goli'], sampleOdds: '3.40' },
  { id: 2, title: 'Mkeka wa mfano #02', category: 'Mpira wa miguu', posted: 'Mfano wa chapisho', selections: ['Barcelona kushinda au sare', 'Bayern Munich zaidi ya magoli 1.5'], sampleOdds: '2.15' },
@@ -300,22 +321,7 @@ function App() {
   };
 
   const exportDemoTicket = async (ticket: DemoTicket, shouldShare = false) => {
-    const demoPoster = {
-      title: ticket.title,
-      sourceLabel: 'DEMO PREVIEW',
-      accessLabel: 'TEST ONLY',
-      dateLabel: 'SAMPLE DATE · NOT A REAL FIXTURE LIST',
-      statusLabel: 'SAMPLE DATA · ODDS HAZIJATHIBITISHWA · HAKUNA AI',
-      testOnly: true,
-      selections: ticket.selections.map((selection, index) => ({
-        homeTeam: `SAMPLE · ${getDemoTeam(selection).name}`,
-        awayTeam: `SAMPLE OPPONENT ${String(index + 1).padStart(2, '0')}`,
-        market: 'SAMPLE PICK',
-        prediction: selection,
-        competition: 'LIGI HAIPATIKANI · TEST ONLY',
-        kickoffAt: 'MUDA HAUPATIKANI · TEST ONLY',
-      })),
-    };
+    const demoPoster = buildDemoPoster(ticket);
     try {
       const result = await renderTicketPng(demoPoster);
       const file = new File([result.blob], `TEST-ONLY-wazee-ticket-${ticket.id}.png`, { type: 'image/png' });
@@ -439,16 +445,13 @@ function App() {
       <div className="listing-grid feed-listing-grid">
         {demoTickets.filter((ticket) => (category === 'Zote' || category === 'Mikeka ya bure' || ticket.category === category) && (!marketSearch || (ticket.title + ' ' + ticket.selections.join(' ')).toLowerCase().includes(marketSearch.toLowerCase()))).map((ticket) => <article className="listing-card demo-ticket-card" key={'demo-' + ticket.id}>
           <div className="ticket-author-row"><span className="official-avatar small">W</span><div><strong>Wazee wa Betting TZ <span className="blue-tick" aria-label="Akaunti rasmi iliyothibitishwa">✓</span></strong><small>{ticket.posted}</small></div><span className="demo-pill">DEMO</span></div>
-          <div className="ticket-poster">
-            <div className="ticket-poster-brand"><span className="poster-brand-mark">W</span><div><strong>WAZEE WA BETTING TZ</strong><small>MKeka WA MFANO · TICKET PREVIEW</small></div><span className="poster-demo-tag">DEMO</span></div>
-            <div className="ticket-poster-heading"><div><small>MKeka WA BURE</small><h3>{ticket.title}</h3></div><span className="ticket-free">MFANO</span></div>
-            <div className="ticket-picks">{ticket.selections.map((selection, index) => { const team = getDemoTeam(selection); const outcome = selection.slice(team.name === 'Timu' ? 0 : team.name.length).trim(); return <div className="ticket-pick-row" key={index}>
-              <span className="ticket-pick-number">{String(index + 1).padStart(2, '0')}</span>
-              <span className="team-logo-wrap">{team.logo ? <img src={team.logo} alt={team.name + ' logo'} loading="lazy" /> : <span className="team-logo-fallback">⚽</span>}</span>
-              <span className="ticket-pick-copy"><strong>{team.name}</strong><small>{outcome || selection}</small></span>
-              <span className="ticket-pick-check">✓</span>
-            </div>; })}</div>
-            <div className="ticket-poster-footer"><div><small>ODDS JUMLA (MFANO)</small><strong>{ticket.sampleOdds}</strong></div><div className="poster-match-count"><strong>{ticket.selections.length}</strong><small>MECHI</small></div><span className="poster-watermark">WBTZ</span></div>
+          <div className="ticket-poster-render" style={{ background: '#080d15', borderRadius: 16, overflow: 'hidden', lineHeight: 0 }}>
+            <img
+              src={ticketPosterSvgDataUrl(buildDemoPoster(ticket))}
+              alt={`${ticket.title} — poster ya mfano ya TEST ONLY`}
+              loading="lazy"
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+            />
           </div>
           <div className="ticket-poster-source"><span>ODDS, LOGOS NA MATOKEO HALISI HUONYESHWA TU ZIKIPATIKANA</span><b>DEMO PREVIEW</b></div>
           <div className="demo-social-actions">
