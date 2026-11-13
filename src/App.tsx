@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import type { User } from './lib/firebase';
 import { apiRequest, loginWithPhone, logout, registerWithPhone, watchAuth } from './lib/firebase';
 import TicketPosterTools from './components/ticket-poster-tools';
-import { renderTicketPng, resolveFresh1X2Odds, ticketPosterSvgDataUrl } from './lib/ticket-poster.js';
+import { resolveFresh1X2Odds, ticketPosterSvgDataUrl } from './lib/ticket-poster.js';
 import type { SportsOddsSnapshot, TicketPosterOdds } from './lib/ticket-poster.js';
 
 type Section = 'overview' | 'marketplace' | 'community' | 'sports' | 'builder' | 'seller' | 'wallet' | 'admin' | 'settings';
