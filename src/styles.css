@@ -538,3 +538,39 @@ body { background:radial-gradient(circle at 84% -8%,#dceeff 0,transparent 28rem)
 @media (max-width:900px), (hover:none) and (pointer:coarse) { .sidebar { width:min(86vw,320px); } .main-area { margin-left:0; } .page-content { padding:24px 16px 22px; } .feed-listing-grid { grid-template-columns:1fr; } .demo-social-actions { grid-template-columns:repeat(2,minmax(0,1fr)); } .ticket-export,.ticket-share { grid-column:span 1; } }
 @media (min-width:761px) and (max-width:900px) { .feed-listing-grid { grid-template-columns:1fr 1fr; } .demo-social-actions { grid-template-columns:1fr 1fr; } .ticket-export,.ticket-share { grid-column:span 1; } }
 @media (max-width:420px) { .page-content { padding-left:12px; padding-right:12px; } .market-feed-heading h1 { font-size:28px; } .demo-ticket-card { padding:10px; border-radius:17px; } .ticket-poster { padding:12px; } .ticket-poster-heading h3 { font-size:14px; } .ticket-poster .ticket-pick-row { grid-template-columns:22px 34px minmax(0,1fr) 20px; gap:7px; min-height:57px; padding:7px; } .team-logo-wrap { width:33px; height:33px; } .team-logo-wrap img { width:26px; height:26px; } .ticket-pick-copy strong { font-size:10px; } .ticket-pick-copy small { font-size:8px; } .ticket-poster-source { align-items:flex-start; flex-direction:column; gap:4px; } .demo-social-actions { grid-template-columns:1fr 1fr; } .ticket-export,.ticket-share { grid-column:1 / -1; } }
+
+
+/* Betting ticket image generator */
+.poster-tools { margin-top:22px; padding:20px; border:1px solid #d7e4ed; border-radius:18px; background:#fff; box-shadow:0 14px 34px #123d5a0c; }
+.poster-tools-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
+.poster-tools-heading h4 { margin:5px 0 4px; color:#102945; font-size:20px; }
+.poster-tools-heading p { margin:0; color:#65798d; font-size:13px; line-height:1.5; }
+.poster-source-chip { flex:none; padding:7px 11px; border-radius:999px; background:#eaf2ff; color:#185ca8; font-size:11px; font-weight:900; letter-spacing:.04em; }
+.poster-preview-image { display:block; width:min(100%,520px); max-height:760px; margin:0 auto; border:1px solid #293747; border-radius:14px; background:#080d14; object-fit:contain; object-position:top; box-shadow:0 12px 32px #09172520; }
+.poster-export-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:16px 0 20px; }
+.poster-export-actions button { min-height:44px; }
+.poster-history { padding-top:13px; border-top:1px solid #e1e8ee; }
+.poster-history summary { display:flex; align-items:center; gap:10px; color:#16324d; cursor:pointer; font-weight:900; }
+.poster-history summary span { display:inline-grid; min-width:23px; height:23px; place-items:center; padding:0 6px; border-radius:99px; background:#e8f2fb; color:#1b65a6; font-size:11px; }
+.poster-history-note,.poster-history-empty { color:#687b8f; font-size:12px; line-height:1.5; }
+.poster-history-toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:12px 0; }
+.poster-history-toolbar label { display:grid; gap:5px; color:#63788c; font-size:12px; font-weight:800; }
+.poster-history-toolbar select { min-height:38px; min-width:170px; padding:7px 10px; border:1px solid #cad9e4; border-radius:8px; background:#fff; color:#18324d; }
+.poster-history-list { display:grid; gap:8px; margin:0; padding:0; list-style:none; }
+.poster-history-list li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 12px; border:1px solid #e1e9ef; border-radius:10px; background:#f8fbfd; }
+.poster-history-list li div { display:grid; gap:4px; min-width:0; }
+.poster-history-list strong { overflow-wrap:anywhere; color:#20384e; font-size:13px; }
+.poster-history-list small { color:#6f8295; font-size:11px; }
+.history-download { flex:none; min-height:38px; padding:7px 10px; border:1px solid #cbdce9; border-radius:8px; background:#fff; color:#145c9b; font-size:12px; font-weight:800; }
+.history-download:hover { background:#edf6ff; }
+@media (max-width:600px) {
+  .poster-tools { padding:14px; }
+  .poster-tools-heading { flex-direction:column; gap:8px; }
+  .poster-preview-image { width:100%; max-height:none; }
+  .poster-export-actions { display:grid; grid-template-columns:1fr; }
+  .poster-export-actions button { width:100%; }
+  .poster-history-toolbar { align-items:stretch; flex-direction:column; }
+  .poster-history-toolbar select { width:100%; }
+  .poster-history-list li { align-items:flex-start; flex-direction:column; }
+  .history-download { width:100%; }
+}

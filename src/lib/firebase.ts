@@ -19,7 +19,7 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const API_BASE = "https://wazee-wa-betting-tz.stewardjackson999.workers.dev";
+export const API_BASE = import.meta.env.VITE_API_BASE ?? "https://wazee-wa-betting-tz.stewardjackson999.workers.dev";
 
 export function phoneToEmail(value: string): string {
   const digits = value.replace(/\D/g, "");

@@ -27,11 +27,14 @@ jobs:
           node -e "const r=require('./npm-audit.json'); for (const [name,v] of Object.entries(r.vulnerabilities||{})) console.log(name+' | '+v.severity+' | '+v.range+' | fix='+JSON.stringify(v.fixAvailable))"
       - name: Typecheck
         run: npm run typecheck
+      - name: Unit tests
+        run: npm test
       - name: Check Worker syntax
         run: node --check worker/preview.js && node --check worker/auth.js
       - name: Production build
         run: npm run build
       - name: Production smoke checks
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: node scripts/smoke-production.mjs
 
       - name: Upload production build artifact
