@@ -56,7 +56,9 @@ export async function apiRequest<T>(path: string, user?: User | null, init: Requ
   const headers = new Headers(init.headers);
   if (user) headers.set("Authorization", "Bearer " + await user.getIdToken());
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  const response = await fetch(API_BASE + path, { ...init, headers });
+  let response: Response;
+  try { response = await fetch(API_BASE + path, { ...init, headers }); }
+  catch { throw new Error('Imeshindikana kuwasiliana na seva. Hakiki intaneti yako kisha jaribu tena.'); }
   const data = await response.json().catch(() => ({})) as T & { error?: string };
   if (!response.ok) {
     const messages: Record<string, string> = {
@@ -69,6 +71,7 @@ export async function apiRequest<T>(path: string, user?: User | null, init: Requ
       admin_account_protected: "Huwezi kusimamisha akaunti ya Admin au akaunti yako mwenyewe.",
       account_status_invalid: "Hali ya akaunti haijatambuliwa.",
       user_not_found: "Mtumiaji hajapatikana.",
+      server_error: "Kuna hitilafu kwenye seva. Jaribu tena baada ya muda.",
     };
     throw new Error((data as { error?: string }).error ? messages[(data as { error: string }).error] || (data as { error: string }).error : "Ombi halikukamilika.");
   }
